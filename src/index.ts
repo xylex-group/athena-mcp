@@ -75,9 +75,10 @@ async function apiFetch(path: string, opts: FetchOptions = {}): Promise<unknown>
 }
 
 async function runQuery(sql: string): Promise<unknown> {
+  const trimmed = sql.trim().replace(/;\s*$/, "");
   return apiFetch("/gateway/query", {
     method: "POST",
-    body: { query: sql },
+    body: { query: trimmed },
   });
 }
 
@@ -258,9 +259,10 @@ server.tool(
 
     let data: unknown;
     if (driver && db_name) {
+      const trimmed = query.trim().replace(/;\s*$/, "");
       data = await apiFetch("/query/sql", {
         method: "POST",
-        body: { query, driver, db_name },
+        body: { query: trimmed, driver, db_name },
       });
     } else {
       data = await runQuery(query);
