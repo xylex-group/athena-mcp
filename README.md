@@ -64,7 +64,9 @@ When `READ_ONLY=true`:
 
 ```bash
 npm install
-npm run build
+npm run build      # tsup (default, fast)
+npm run build:tsc  # plain TypeScript compiler
+npm run build:rollup  # Rollup bundle
 npm start
 ```
 
@@ -73,4 +75,11 @@ npm start
 ```bash
 npm run test        # Run tests once
 npm run test:watch  # Run tests in watch mode
+```
+
+### Linting
+
+```bash
+npm run lint       # Check for issues
+npm run lint:fix   # Auto-fix issues
 ```

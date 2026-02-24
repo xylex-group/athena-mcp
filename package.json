@@ -1,25 +1,46 @@
 {
   "name": "athena-mcp",
-  "version": "1.0.0",
-  "description": "MCP server for the Athena database gateway",
+  "version": "0.1.0",
+  "description": "MCP server for the Athena",
   "main": "dist/index.js",
+  "displayName": "Athena MCP",
+  "publisher": "XYLEX Group",
+  "contributors": [
+    {
+      "name": "XYLEX Group",
+      "url": "https://xylex.group"
+    }
+  ],
   "bin": {
     "athena-mcp": "dist/index.js"
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
+    "build:rollup": "rollup -c rollup.config.mjs",
+    "build:tsc": "tsc",
     "prepublishOnly": "npm run build",
     "start": "node dist/index.js",
-    "dev": "tsc && node dist/index.js",
+    "dev": "tsup && node dist/index.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xylex-group/athena-mcp.git"
   },
-  "keywords": ["mcp", "athena", "postgres", "database"],
+  "keywords": [
+    "mcp",
+    "athena",
+    "postgres",
+    "database"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -37,6 +58,15 @@
   "devDependencies": {
     "@types/node": "^25.3.0",
     "typescript": "^5.9.3",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "tsup": "^8.4.0",
+    "rollup": "^4.28.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-typescript": "^11.1.0",
+    "tslib": "^2.8.0",
+    "eslint": "^9.17.0",
+    "@eslint/js": "^9.17.0",
+    "typescript-eslint": "^8.18.0"
   }
 }
