@@ -28,6 +28,9 @@ const VERSION = getVersion();
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 const BASE_URL = process.env.ATHENA_BASE_URL ?? "https://pool.athena-db.com";
+if (!BASE_URL.startsWith("http://") && !BASE_URL.startsWith("https://")) {
+  throw new Error(`ATHENA_BASE_URL must start with http:// or https://, got: ${BASE_URL}`);
+}
 const API_KEY = process.env.ATHENA_API_KEY ?? "";
 const ATHENA_CLIENT = process.env.ATHENA_CLIENT ?? "postgresql";
 const READ_ONLY = process.env.READ_ONLY === "true";
