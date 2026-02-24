@@ -2,6 +2,18 @@
 
 MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Athena's PostgreSQL management API as MCP tools for use with LLM agents and AI coding assistants.
 
+## Install
+
+```bash
+npm install athena-mcp
+```
+
+Or run without installing:
+
+```bash
+npx athena-mcp
+```
+
 ## Tools
 
 | Tool | Description |
