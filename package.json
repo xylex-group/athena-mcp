@@ -1,5 +1,5 @@
 {
-  "name": "athena-mcp",
+  "name": "@xylex-group/athena-mcp",
   "version": "0.1.0",
   "description": "MCP server for the Athena",
   "main": "dist/index.js",
@@ -46,6 +46,9 @@
   "type": "commonjs",
   "engines": {
     "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "bugs": {
     "url": "https://github.com/xylex-group/athena-mcp/issues"

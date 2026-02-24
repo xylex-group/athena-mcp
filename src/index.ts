@@ -1,9 +1,29 @@
 #!/usr/bin/env node
+/** @see https://nodejs.org/api/modules.html#__dirname - available in CJS output */
+declare const __dirname: string;
+
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { createServer } from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { sanitizeIdentifier } from "./identifier.js";
 import { isWriteQuery } from "./query.js";
+
+// ─── Version (from package.json) ────────────────────────────────────────────
+
+function getVersion(): string {
+  try {
+    const pkgPath = join(__dirname, "..", "package.json");
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as { version?: string };
+    return pkg.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
+
+const VERSION = getVersion();
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -11,6 +31,7 @@ const BASE_URL = process.env.ATHENA_BASE_URL ?? "https://mcp.athena-db.com";
 const API_KEY = process.env.ATHENA_API_KEY ?? "";
 const ATHENA_CLIENT = process.env.ATHENA_CLIENT ?? "postgresql";
 const READ_ONLY = process.env.READ_ONLY === "true";
+const HEALTH_PORT = process.env.HEALTH_PORT ? parseInt(process.env.HEALTH_PORT, 10) : undefined;
 
 // ─── HTTP helpers ─────────────────────────────────────────────────────────────
 
@@ -61,7 +82,7 @@ async function runQuery(sql: string): Promise<unknown> {
 
 const server = new McpServer({
   name: "athena-mcp",
-  version: "1.0.0",
+  version: VERSION,
 });
 
 // ─── Tool: list_tables ────────────────────────────────────────────────────────
@@ -235,11 +256,31 @@ server.tool(
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
+function startHealthServer(): void {
+  if (HEALTH_PORT == null || HEALTH_PORT <= 0) return;
+
+  const healthServer = createServer((req, res) => {
+    if (req.method === "GET" && (req.url === "/health" || req.url === "/")) {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ status: "ok", version: VERSION }));
+      return;
+    }
+    res.writeHead(404);
+    res.end();
+  });
+
+  healthServer.listen(HEALTH_PORT, () => {
+    process.stderr.write(`athena-mcp health server listening on port ${HEALTH_PORT}\n`);
+  });
+}
+
 async function main(): Promise<void> {
+  startHealthServer();
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
   process.stderr.write(
-    `athena-mcp started (base_url=${BASE_URL}, client=${ATHENA_CLIENT}, read_only=${READ_ONLY})\n`
+    `athena-mcp started (base_url=${BASE_URL}, client=${ATHENA_CLIENT}, read_only=${READ_ONLY}, version=${VERSION})\n`
   );
 }
 
