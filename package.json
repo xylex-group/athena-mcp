@@ -21,6 +21,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "prepare": "npm run build",
     "build:rollup": "rollup -c rollup.config.mjs",
     "build:tsc": "tsc",
     "prepublishOnly": "npm run build",
