@@ -5,14 +5,111 @@ MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Ath
 ## Install
 
 ```bash
-npm install athena-mcp
+npm install @xylex-group/athena-mcp
 ```
 
 Or run without installing:
 
 ```bash
-npx athena-mcp
+npx @xylex-group/athena-mcp
 ```
+
+## Adding to AI coding assistants
+
+### Cursor
+
+1. Open **Cursor Settings** → **Cursor Tab** → **MCP** (or `Cmd/Ctrl + ,` → search "MCP")
+2. Click **Add new MCP server** and configure:
+   - **Name:** `athena`
+   - **Type:** Command
+   - **Command:** `npx`
+   - **Args:** `@xylex-group/athena-mcp`
+   - **Env:** Add `ATHENA_API_KEY`, `ATHENA_CLIENT` (for X-Athena-Client header), `READ_ONLY`, etc.
+
+Or add to `.cursor/mcp.json` in your project:
+
+```json
+{
+  "mcpServers": {
+    "athena": {
+      "command": "npx",
+      "args": ["@xylex-group/athena-mcp"],
+      "env": {
+        "ATHENA_API_KEY": "<your-api-key>",
+        "ATHENA_CLIENT": "postgresql",
+        "READ_ONLY": "true"
+      }
+    }
+  }
+}
+```
+
+Restart Cursor after changing the config.
+
+### Claude Code
+
+Add the server via CLI:
+
+```bash
+claude mcp add athena -- npx @xylex-group/athena-mcp
+```
+
+Or edit the config file directly:
+
+- **macOS/Linux:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "athena": {
+      "command": "npx",
+      "args": ["@xylex-group/athena-mcp"],
+      "env": {
+        "ATHENA_API_KEY": "<your-api-key>",
+        "ATHENA_CLIENT": "postgresql",
+        "READ_ONLY": "true"
+      }
+    }
+  }
+}
+```
+
+For project scope, create `.mcp.json` in your project root and run `claude mcp add --scope project athena -- npx @xylex-group/athena-mcp`.
+
+### Windsurf
+
+1. Go to **Plugins** → **Manage plugins** → **View raw config**
+2. Add the athena server to the JSON config:
+
+```json
+{
+  "mcpServers": {
+    "athena": {
+      "command": "npx",
+      "args": ["@xylex-group/athena-mcp"],
+      "env": {
+        "ATHENA_API_KEY": "<your-api-key>",
+        "ATHENA_CLIENT": "postgresql",
+        "READ_ONLY": "true"
+      }
+    }
+  }
+}
+```
+
+3. Save and refresh Windsurf.
+
+### Zed
+
+1. Open **Settings** → **Features** → **AI** → **MCP**
+2. Add a custom server with:
+   - **Name:** `athena`
+   - **Command:** `npx`
+   - **Args:** `@xylex-group/athena-mcp`
+   - **Env:** `ATHENA_API_KEY`, `ATHENA_CLIENT`, `READ_ONLY`, etc.
+
+Or edit the MCP config JSON in Zed settings and add the same `athena` entry as above.
 
 ## Tools
 
@@ -33,7 +130,7 @@ Set the following environment variables before starting the server:
 |----------|-------------|---------|
 | `ATHENA_BASE_URL` | Base URL of the Athena API | `https://mcp.athena-db.com` |
 | `ATHENA_API_KEY` | API key (sent as `apikey` / `x-api-key` headers) | _(empty)_ |
-| `ATHENA_CLIENT` | Value for the `X-Athena-Client` header | `postgresql` |
+| `ATHENA_CLIENT` | Value for the `X-Athena-Client` API header (e.g. `postgresql`, `supabase`) | `postgresql` |
 | `READ_ONLY` | Set to `true` to disable write operations | `false` |
 | `HEALTH_PORT` | Port for HTTP health server (GET /health returns version). Omit to disable | _(disabled)_ |
 
@@ -43,14 +140,16 @@ When `READ_ONLY=true`:
 - `apply_migration` returns an error immediately.
 - `execute_sql` rejects queries containing write keywords (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ALTER`, `TRUNCATE`, `GRANT`, `REVOKE`, `REPLACE`).
 
-## Usage
+## Usage (generic MCP config)
+
+Most MCP clients use this format:
 
 ```json
 {
   "mcpServers": {
     "athena": {
       "command": "npx",
-      "args": ["athena-mcp"],
+      "args": ["@xylex-group/athena-mcp"],
       "env": {
         "ATHENA_API_KEY": "<your-api-key>",
         "ATHENA_CLIENT": "postgresql",
