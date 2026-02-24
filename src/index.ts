@@ -78,6 +78,34 @@ async function runQuery(sql: string): Promise<unknown> {
   });
 }
 
+interface TableRef {
+  schema: string;
+  table: string;
+  qualified: string;
+}
+
+function parseTableRef(table: string, defaultSchema?: string): TableRef {
+  const schemaDefault = sanitizeIdentifier(defaultSchema ?? "public", "schema");
+  if (table.includes(".")) {
+    const [schemaPart, tablePart] = table.split(".", 2);
+    const schemaName = sanitizeIdentifier(schemaPart.trim(), "schema");
+    const tableName = sanitizeIdentifier(tablePart.trim(), "table");
+    return {
+      schema: schemaName,
+      table: tableName,
+      qualified: `${schemaName}.${tableName}`,
+    };
+  }
+
+  const tableName = sanitizeIdentifier(table, "table");
+  const qualified = schemaDefault === "public" ? tableName : `${schemaDefault}.${tableName}`;
+  return {
+    schema: schemaDefault,
+    table: tableName,
+    qualified,
+  };
+}
+
 // ─── MCP Server setup ─────────────────────────────────────────────────────────
 
 const server = new McpServer({
@@ -248,6 +276,131 @@ server.tool(
     const levelClause = level ? ` WHERE level = '${level.replace(/'/g, "''")}'` : "";
     const sql = `SELECT * FROM ${tbl}${levelClause} ORDER BY created_at DESC LIMIT ${n};`;
     const data = await runQuery(sql);
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: get_columns_of_table ────────────────────────────────────────────
+
+server.tool(
+  "get_columns_of_table",
+  "Describe columns for a table using Athena's schema API",
+  {
+    table: z.string().describe("Table name (optionally schema-qualified) to describe"),
+    schema: z.string().optional().describe("Optional schema name when the table name is not schema-qualified"),
+  },
+  async ({ table, schema }) => {
+    const ref = parseTableRef(table, schema);
+    const data = await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`);
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: list_schemas ───────────────────────────────────────────────────
+
+server.tool(
+  "list_schemas",
+  "List database schemas visible to the current Athena client",
+  {
+    include_system: z
+      .boolean()
+      .optional()
+      .describe("Include system schemas such as pg_catalog and information_schema"),
+  },
+  async ({ include_system }) => {
+    const sql = include_system
+      ? "SELECT schema_name FROM information_schema.schemata ORDER BY schema_name;"
+      : "SELECT nspname AS schema_name FROM pg_catalog.pg_namespace WHERE nspname NOT LIKE 'pg_%' AND nspname != 'information_schema' ORDER BY nspname;";
+    const data = await runQuery(sql);
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: list_views ─────────────────────────────────────────────────────
+
+server.tool(
+  "list_views",
+  "List visible views (and optionally materialized views)",
+  {
+    schema: z.string().optional().describe("Schema to limit the view lookup to"),
+    include_materialized: z
+      .boolean()
+      .optional()
+      .describe("Include materialized views defined in pg_matviews"),
+  },
+  async ({ schema, include_materialized }) => {
+    const sanitizedSchema = schema ? sanitizeIdentifier(schema, "schema") : undefined;
+    const schemaFilter = sanitizedSchema
+      ? `table_schema = '${sanitizedSchema}'`
+      : "table_schema NOT IN ('pg_catalog', 'information_schema')";
+    let sql = `
+SELECT table_schema, table_name, view_definition
+FROM information_schema.views
+WHERE ${schemaFilter}
+`;
+
+    if (include_materialized) {
+      const matSchemaFilter = sanitizedSchema
+        ? `schemaname = '${sanitizedSchema}'`
+        : "schemaname NOT IN ('pg_catalog', 'information_schema')";
+      sql += `
+UNION ALL
+SELECT schemaname AS table_schema, matviewname AS table_name, definition AS view_definition
+FROM pg_catalog.pg_matviews
+WHERE ${matSchemaFilter}
+`;
+    }
+
+    sql += "ORDER BY table_schema, table_name;";
+    const data = await runQuery(sql);
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: get_row_by_eq_column_of_table ──────────────────────────────────
+
+server.tool(
+  "get_row_by_eq_column_of_table",
+  "Fetch rows from a table where `column = value` using Athena's fetch endpoint",
+  {
+    table: z.string().describe("Table name to query (optionally schema-qualified)"),
+    column: z.string().describe("Column name to match against"),
+    value: z
+      .union([z.string(), z.number(), z.boolean()])
+      .describe("Value to compare (converted to string for Athena)"),
+    schema: z.string().optional().describe("Optional schema to override the table name"),
+    limit: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Maximum number of rows to return (defaults to 100)"),
+  },
+  async ({ table, column, value, schema, limit }) => {
+    const ref = parseTableRef(table, schema);
+    const columnName = sanitizeIdentifier(column, "column");
+    const payload = {
+      table_name: ref.qualified,
+      conditions: [
+        {
+          eq_column: columnName,
+          eq_value: String(value),
+        },
+      ],
+      limit: limit ?? 100,
+    };
+    const data = await apiFetch("/gateway/fetch", {
+      method: "POST",
+      body: payload,
+    });
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };

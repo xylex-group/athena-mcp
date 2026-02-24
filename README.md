@@ -121,14 +121,18 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 
 ## Tools
 
-| Tool              | Description                                                          |
-| ----------------- | -------------------------------------------------------------------- |
-| `list_tables`     | List all tables in the connected database                            |
-| `list_extensions` | List all installed PostgreSQL extensions                             |
-| `list_migrations` | List applied database migrations                                     |
-| `apply_migration` | Apply a SQL migration (blocked in read-only mode)                    |
-| `execute_sql`     | Execute a raw SQL query (write operations blocked in read-only mode) |
-| `get_logs`        | Retrieve recent database / application logs                          |
+| Tool                          | Description                                                          |
+| ----------------------------- | -------------------------------------------------------------------- |
+| `list_tables`                 | List all tables in the connected database                            |
+| `list_extensions`             | List all installed PostgreSQL extensions                             |
+| `list_migrations`             | List applied database migrations                                     |
+| `apply_migration`             | Apply a SQL migration (blocked in read-only mode)                    |
+| `execute_sql`                 | Execute a raw SQL query (write operations blocked in read-only mode) |
+| `get_logs`                    | Retrieve recent database / application logs                         |
+| `get_columns_of_table`        | Get column metadata (types, defaults, nullability) for a table       |
+| `list_schemas`                | List all schemas in the database                                     |
+| `list_views`                  | List all views (optionally include materialized views)               |
+| `get_row_by_eq_column_of_table` | Look up row(s) where a column equals a value (e.g. user_id=123)     |
 
 ## Configuration
 
