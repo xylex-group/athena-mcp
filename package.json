@@ -30,7 +30,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src",
-    "lint:fix": "eslint src --fix"
+    "lint:fix": "eslint src --fix",
+    "inspector": "npx @modelcontextprotocol/inspector"
   },
   "repository": {
     "type": "git",
