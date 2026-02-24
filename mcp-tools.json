@@ -199,6 +199,122 @@
         },
         "required": ["table", "column", "value"]
       }
+    },
+    {
+      "name": "list_foreign_keys",
+      "description": "List primary keys, foreign keys, and unique constraints for a table. Essential for understanding relationships and correct joins.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
+          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "get_table_sample",
+      "description": "Sample rows from a table to understand its data shape. Quick alternative to writing SQL.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
+          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" },
+          "limit": { "type": "integer", "minimum": 1, "description": "Number of rows to sample (defaults to 10)" }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "list_indexes",
+      "description": "List index definitions for a table. Helps with performance and query design.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
+          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "search_columns",
+      "description": "Find tables and columns by name pattern. Speeds up schema discovery.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pattern": { "type": "string", "description": "Column or table name pattern (SQL LIKE, use % for wildcard)" },
+          "schema": { "type": "string", "description": "Optional schema to limit search" }
+        },
+        "required": ["pattern"]
+      }
+    },
+    {
+      "name": "get_row_by_id",
+      "description": "Fetch rows by primary key column value. Simplifies the common fetch-by-id use case.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
+          "id": { "oneOf": [{ "type": "string" }, { "type": "number" }], "description": "Primary key value (typically id)" },
+          "id_column": { "type": "string", "description": "Primary key column name (defaults to 'id')" },
+          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" },
+          "limit": { "type": "integer", "minimum": 1, "description": "Maximum rows to return (defaults to 100)" }
+        },
+        "required": ["table", "id"]
+      }
+    },
+    {
+      "name": "list_all_table_metadata",
+      "description": "Return metadata for all tables in one call: schema, name, columns, types, defaults, nullable. Single overview of the whole schema.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "schema": { "type": "string", "description": "Optional schema to limit to (default: all user schemas)" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "insert_row",
+      "description": "Insert a row into a table. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
+          "data": { "type": "object", "additionalProperties": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }, { "type": "null" }] }, "description": "Row data as key-value pairs" },
+          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+        },
+        "required": ["table", "data"]
+      }
+    },
+    {
+      "name": "delete_row",
+      "description": "Delete a row by primary key (resource_id). Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
+          "resource_id": { "type": "string", "description": "Primary key value of the row to delete" },
+          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+        },
+        "required": ["table", "resource_id"]
+      }
+    },
+    {
+      "name": "update_row",
+      "description": "Update rows matching a condition. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
+          "set": { "type": "object", "additionalProperties": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }, { "type": "null" }] }, "description": "Column-value pairs to set" },
+          "where_column": { "type": "string", "description": "Column to match in WHERE clause" },
+          "where_value": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }], "description": "Value to match (converted to string)" },
+          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+        },
+        "required": ["table", "set", "where_column", "where_value"]
+      }
     }
   ]
 }

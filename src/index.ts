@@ -399,6 +399,340 @@ WHERE ${matSchemaFilter}
   }
 );
 
+// ─── Tool: list_foreign_keys ──────────────────────────────────────────────
+
+server.tool(
+  "list_foreign_keys",
+  "List primary keys, foreign keys, and unique constraints for a table. Essential for understanding relationships and correct joins.",
+  {
+    table: z.string().describe("Table name (optionally schema-qualified)"),
+    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+  },
+  async ({ table, schema }) => {
+    const ref = parseTableRef(table, schema);
+    const schemaLit = ref.schema.replace(/'/g, "''");
+    const tableLit = ref.table.replace(/'/g, "''");
+    const sql = `
+SELECT
+  tc.constraint_type,
+  tc.constraint_name,
+  kcu.column_name,
+  ccu.table_schema AS foreign_table_schema,
+  ccu.table_name AS foreign_table_name,
+  ccu.column_name AS foreign_column_name
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu
+  ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+LEFT JOIN information_schema.constraint_column_usage ccu
+  ON tc.constraint_name = ccu.constraint_name AND tc.table_schema = ccu.table_schema
+WHERE tc.table_schema = '${schemaLit}' AND tc.table_name = '${tableLit}'
+  AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE')
+ORDER BY tc.constraint_type, tc.constraint_name, kcu.ordinal_position;
+`;
+    const data = await runQuery(sql);
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: get_table_sample ────────────────────────────────────────────────
+
+server.tool(
+  "get_table_sample",
+  "Sample rows from a table to understand its data shape. Quick alternative to writing SQL.",
+  {
+    table: z.string().describe("Table name (optionally schema-qualified)"),
+    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+    limit: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Number of rows to sample (defaults to 10)"),
+  },
+  async ({ table, schema, limit }) => {
+    const ref = parseTableRef(table, schema);
+    const n = limit ?? 10;
+    const sql = `SELECT * FROM ${ref.qualified} LIMIT ${n};`;
+    const data = await runQuery(sql);
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: list_indexes ────────────────────────────────────────────────────
+
+server.tool(
+  "list_indexes",
+  "List index definitions for a table. Helps with performance and query design.",
+  {
+    table: z.string().describe("Table name (optionally schema-qualified)"),
+    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+  },
+  async ({ table, schema }) => {
+    const ref = parseTableRef(table, schema);
+    const schemaLit = ref.schema.replace(/'/g, "''");
+    const tableLit = ref.table.replace(/'/g, "''");
+    const sql = `
+SELECT
+  indexname,
+  indexdef
+FROM pg_indexes
+WHERE schemaname = '${schemaLit}' AND tablename = '${tableLit}'
+ORDER BY indexname;
+`;
+    const data = await runQuery(sql);
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: search_columns ───────────────────────────────────────────────────
+
+server.tool(
+  "search_columns",
+  "Find tables and columns by name pattern. Speeds up schema discovery.",
+  {
+    pattern: z.string().describe("Column or table name pattern (SQL LIKE, use % for wildcard)"),
+    schema: z.string().optional().describe("Optional schema to limit search"),
+  },
+  async ({ pattern, schema }) => {
+    const patternLit = pattern.replace(/'/g, "''");
+    const schemaFilter = schema
+      ? `AND c.table_schema = '${sanitizeIdentifier(schema, "schema")}'`
+      : "AND c.table_schema NOT IN ('pg_catalog', 'information_schema')";
+    const sql = `
+SELECT c.table_schema, c.table_name, c.column_name, c.data_type, c.is_nullable
+FROM information_schema.columns c
+WHERE (c.column_name ILIKE '${patternLit}' OR c.table_name ILIKE '${patternLit}')
+  ${schemaFilter}
+ORDER BY c.table_schema, c.table_name, c.ordinal_position;
+`;
+    const data = await runQuery(sql);
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: get_row_by_id ───────────────────────────────────────────────────
+
+server.tool(
+  "get_row_by_id",
+  "Fetch rows by primary key column value. Simplifies the common fetch-by-id use case.",
+  {
+    table: z.string().describe("Table name (optionally schema-qualified)"),
+    id: z
+      .union([z.string(), z.number()])
+      .describe("Primary key value (typically id)"),
+    id_column: z
+      .string()
+      .optional()
+      .describe("Primary key column name (defaults to 'id')"),
+    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+    limit: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Maximum rows to return (defaults to 100)"),
+  },
+  async ({ table, id, id_column, schema, limit }) => {
+    const ref = parseTableRef(table, schema);
+    const columnName = sanitizeIdentifier(id_column ?? "id", "id_column");
+    const payload = {
+      table_name: ref.qualified,
+      conditions: [{ eq_column: columnName, eq_value: String(id) }],
+      limit: limit ?? 100,
+    };
+    const data = await apiFetch("/gateway/fetch", {
+      method: "POST",
+      body: payload,
+    });
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: list_all_table_metadata ─────────────────────────────────────────
+
+server.tool(
+  "list_all_table_metadata",
+  "Return metadata for all tables in one call: schema, name, columns, types, defaults, nullable. Single overview of the whole schema.",
+  {
+    schema: z.string().optional().describe("Optional schema to limit to (default: all user schemas)"),
+  },
+  async ({ schema }) => {
+    const schemaLit = schema ? sanitizeIdentifier(schema, "schema").replace(/'/g, "''") : null;
+    const schemaFilter = schemaLit
+      ? `WHERE c.table_schema = '${schemaLit}'`
+      : "WHERE c.table_schema NOT IN ('pg_catalog', 'information_schema')";
+    const sql = `
+SELECT
+  c.table_schema AS schema,
+  c.table_name AS table_name,
+  c.column_name AS column_name,
+  c.data_type AS data_type,
+  c.column_default AS column_default,
+  c.is_nullable AS is_nullable
+FROM information_schema.columns c
+${schemaFilter}
+ORDER BY c.table_schema, c.table_name, c.ordinal_position;
+`;
+    const raw = (await runQuery(sql)) as Array<{
+      schema: string;
+      table_name: string;
+      column_name: string;
+      data_type: string;
+      column_default: string | null;
+      is_nullable: string;
+    }>;
+    const byTable = new Map<string, { schema: string; table: string; columns: Array<{ name: string; type: string; nullable: boolean; default: string | null }> }>();
+    for (const row of raw) {
+      const key = `${row.schema}.${row.table_name}`;
+      if (!byTable.has(key)) {
+        byTable.set(key, {
+          schema: row.schema,
+          table: row.table_name,
+          columns: [],
+        });
+      }
+      byTable.get(key)!.columns.push({
+        name: row.column_name,
+        type: row.data_type,
+        nullable: (row.is_nullable ?? "YES").toUpperCase() === "YES",
+        default: row.column_default,
+      });
+    }
+    const metadata = Array.from(byTable.values());
+    return {
+      content: [{ type: "text", text: JSON.stringify(metadata, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: insert_row ──────────────────────────────────────────────────────
+
+server.tool(
+  "insert_row",
+  "Insert a row into a table. Blocked when read_only mode is enabled.",
+  {
+    table: z.string().describe("Table name (optionally schema-qualified)"),
+    data: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).describe("Row data as key-value pairs"),
+    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+  },
+  async ({ table, data, schema }) => {
+    if (READ_ONLY) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: "insert_row is disabled: server is running in read-only mode.",
+          },
+        ],
+      };
+    }
+    const ref = parseTableRef(table, schema);
+    const insert_body = Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [sanitizeIdentifier(k, "column"), v])
+    );
+    const payload = { table_name: ref.qualified, insert_body };
+    const result = await apiFetch("/gateway/insert", {
+      method: "PUT",
+      body: payload,
+    });
+    return {
+      content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: delete_row ───────────────────────────────────────────────────────
+
+server.tool(
+  "delete_row",
+  "Delete a row by primary key (resource_id). Blocked when read_only mode is enabled.",
+  {
+    table: z.string().describe("Table name (optionally schema-qualified)"),
+    resource_id: z.string().describe("Primary key value of the row to delete"),
+    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+  },
+  async ({ table, resource_id, schema }) => {
+    if (READ_ONLY) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: "delete_row is disabled: server is running in read-only mode.",
+          },
+        ],
+      };
+    }
+    const ref = parseTableRef(table, schema);
+    const payload = { table_name: ref.qualified, resource_id };
+    const result = await apiFetch("/gateway/delete", {
+      method: "DELETE",
+      body: payload,
+    });
+    return {
+      content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
+
+// ─── Tool: update_row ───────────────────────────────────────────────────────
+
+server.tool(
+  "update_row",
+  "Update rows matching a condition. Blocked when read_only mode is enabled.",
+  {
+    table: z.string().describe("Table name (optionally schema-qualified)"),
+    set: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).describe("Column-value pairs to set"),
+    where_column: z.string().describe("Column to match in WHERE clause"),
+    where_value: z
+      .union([z.string(), z.number(), z.boolean()])
+      .describe("Value to match (converted to string)"),
+    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+  },
+  async ({ table, set, where_column, where_value, schema }) => {
+    if (READ_ONLY) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: "update_row is disabled: server is running in read-only mode.",
+          },
+        ],
+      };
+    }
+    const ref = parseTableRef(table, schema);
+    const whereCol = sanitizeIdentifier(where_column, "where_column");
+    function toSqlLiteral(val: string | number | boolean | null): string {
+      if (val === null) return "NULL";
+      if (typeof val === "boolean") return val ? "TRUE" : "FALSE";
+      if (typeof val === "number") return String(val);
+      return `'${String(val).replace(/'/g, "''")}'`;
+    }
+    const setParts = Object.entries(set).map(([col, val]) => {
+      const c = sanitizeIdentifier(col, "column");
+      return `${c} = ${toSqlLiteral(val as string | number | boolean | null)}`;
+    });
+    const whereVal = toSqlLiteral(where_value);
+    const sql = `UPDATE ${ref.qualified} SET ${setParts.join(", ")} WHERE ${whereCol} = ${whereVal};`;
+    const data = await runQuery(sql);
+    return {
+      content: [{ type: "text", text: JSON.stringify({ result: data }, null, 2) }],
+    };
+  }
+);
+
 // ─── Tool: get_row_by_eq_column_of_table ──────────────────────────────────
 
 server.tool(

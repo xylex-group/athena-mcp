@@ -180,6 +180,149 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ToolResult'
+  /tools/list_foreign_keys:
+    post:
+      summary: List primary keys, foreign keys, and unique constraints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListForeignKeysRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_table_sample:
+    post:
+      summary: Sample rows from a table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetTableSampleRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_indexes:
+    post:
+      summary: List index definitions for a table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListIndexesRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/search_columns:
+    post:
+      summary: Find tables and columns by name pattern
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchColumnsRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_row_by_id:
+    post:
+      summary: Fetch rows by primary key value
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetRowByIdRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_all_table_metadata:
+    post:
+      summary: Return metadata for all tables
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListAllTableMetadataRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/insert_row:
+    post:
+      summary: Insert a row into a table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsertRowRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/delete_row:
+    post:
+      summary: Delete a row by primary key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteRowRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/update_row:
+    post:
+      summary: Update rows matching a condition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRowRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
 components:
   schemas:
     EmptyRequest:
@@ -296,6 +439,152 @@ components:
       - table
       - column
       - value
+    ListForeignKeysRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name (optionally schema-qualified)
+        schema:
+          type: string
+          description: Optional schema when table name is not schema-qualified
+      required:
+      - table
+    GetTableSampleRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name (optionally schema-qualified)
+        schema:
+          type: string
+          description: Optional schema when table name is not schema-qualified
+        limit:
+          type: integer
+          minimum: 1
+          description: Number of rows to sample (defaults to 10)
+      required:
+      - table
+    ListIndexesRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name (optionally schema-qualified)
+        schema:
+          type: string
+          description: Optional schema when table name is not schema-qualified
+      required:
+      - table
+    SearchColumnsRequest:
+      type: object
+      properties:
+        pattern:
+          type: string
+          description: Column or table name pattern (SQL LIKE, use % for wildcard)
+        schema:
+          type: string
+          description: Optional schema to limit search
+      required:
+      - pattern
+    GetRowByIdRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name (optionally schema-qualified)
+        id:
+          oneOf:
+          - type: string
+          - type: number
+          description: Primary key value (typically id)
+        id_column:
+          type: string
+          description: Primary key column name (defaults to 'id')
+        schema:
+          type: string
+          description: Optional schema when table name is not schema-qualified
+        limit:
+          type: integer
+          minimum: 1
+          description: Maximum rows to return (defaults to 100)
+      required:
+      - table
+      - id
+    ListAllTableMetadataRequest:
+      type: object
+      properties:
+        schema:
+          type: string
+          description: Optional schema to limit to (default all user schemas)
+    InsertRowRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name (optionally schema-qualified)
+        data:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: "null"
+          description: Row data as key-value pairs
+        schema:
+          type: string
+          description: Optional schema when table name is not schema-qualified
+      required:
+      - table
+      - data
+    DeleteRowRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name (optionally schema-qualified)
+        resource_id:
+          type: string
+          description: Primary key value of the row to delete
+        schema:
+          type: string
+          description: Optional schema when table name is not schema-qualified
+      required:
+      - table
+      - resource_id
+    UpdateRowRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name (optionally schema-qualified)
+        set:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: "null"
+          description: Column-value pairs to set
+        where_column:
+          type: string
+          description: Column to match in WHERE clause
+        where_value:
+          oneOf:
+          - type: string
+          - type: number
+          - type: boolean
+          description: Value to match (converted to string)
+        schema:
+          type: string
+          description: Optional schema when table name is not schema-qualified
+      required:
+      - table
+      - set
+      - where_column
+      - where_value
     ToolResult:
       type: object
       properties:

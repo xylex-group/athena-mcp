@@ -121,18 +121,30 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 
 ## Tools
 
-| Tool                          | Description                                                          |
-| ----------------------------- | -------------------------------------------------------------------- |
-| `list_tables`                 | List all tables in the connected database                            |
-| `list_extensions`             | List all installed PostgreSQL extensions                             |
-| `list_migrations`             | List applied database migrations                                     |
-| `apply_migration`             | Apply a SQL migration (blocked in read-only mode)                    |
-| `execute_sql`                 | Execute a raw SQL query (write operations blocked in read-only mode) |
-| `get_logs`                    | Retrieve recent database / application logs                         |
-| `get_columns_of_table`        | Get column metadata (types, defaults, nullability) for a table       |
-| `list_schemas`                | List all schemas in the database                                     |
-| `list_views`                  | List all views (optionally include materialized views)               |
+| Tool                           | Description                                                          |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `list_tables`                  | List all tables in the connected database                            |
+| `list_extensions`              | List all installed PostgreSQL extensions                             |
+| `list_migrations`              | List applied database migrations                                     |
+| `apply_migration`              | Apply a SQL migration (blocked in read-only mode)                     |
+| `execute_sql`                  | Execute a raw SQL query (write operations blocked in read-only mode)  |
+| `get_logs`                     | Retrieve recent database / application logs                          |
+| `get_columns_of_table`         | Get column metadata (types, defaults, nullability) for a table        |
+| `list_table_metadata`          | Full table metadata: schema, columns, types, defaults, nullable      |
+| `list_schemas`                 | List all schemas in the database                                      |
+| `list_views`                   | List all views (optionally include materialized views)                |
 | `get_row_by_eq_column_of_table` | Look up row(s) where a column equals a value (e.g. user_id=123)     |
+| `list_foreign_keys`            | List primary keys, foreign keys, and unique constraints               |
+| `get_table_sample`             | Sample rows from a table to understand data shape                    |
+| `list_indexes`                 | List index definitions for a table                                   |
+| `search_columns`               | Find tables and columns by name pattern                               |
+| `get_row_by_id`                | Fetch rows by primary key value (default column: id)                  |
+| `list_all_table_metadata`      | Metadata for all tables in one call                                  |
+| `insert_row`                   | Insert a row (blocked in read-only mode)                             |
+| `delete_row`                   | Delete a row by primary key (blocked in read-only mode)               |
+| `update_row`                   | Update rows matching a condition (blocked in read-only mode)          |
+
+Tool schemas are documented in [`mcp-tools.json`](mcp-tools.json) (MCP-native) and [`athena-mcp-openapi.yaml`](athena-mcp-openapi.yaml) (OpenAPI 3.0).
 
 ## Configuration
 
@@ -150,7 +162,7 @@ Set the following environment variables before starting the server:
 
 When `READ_ONLY=true`:
 
-- `apply_migration` returns an error immediately.
+- `apply_migration`, `insert_row`, `delete_row`, and `update_row` return an error immediately.
 - `execute_sql` rejects queries containing write keywords (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ALTER`, `TRUNCATE`, `GRANT`, `REVOKE`, `REPLACE`).
 
 ## Usage (generic MCP config)
