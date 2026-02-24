@@ -8,6 +8,10 @@ MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Ath
 npm install @xylex-group/athena-mcp
 ```
 
+```
+npx -y --package=git+https://github.com/xylex-group/athena-mcp.git athena-mcp --version
+```
+
 Or run without installing:
 
 ```bash
@@ -33,11 +37,15 @@ Or add to `.cursor/mcp.json` in your project:
   "mcpServers": {
     "athena": {
       "command": "npx",
-      "args": ["@xylex-group/athena-mcp"],
+      "args": [
+        "-y",
+        "--package=git+https://github.com/xylex-group/athena-mcp.git",
+        "athena-mcp"
+      ],
       "env": {
-        "ATHENA_API_KEY": "<your-api-key>",
-        "ATHENA_CLIENT": "postgresql",
-        "READ_ONLY": "true"
+        "ATHENA_API_KEY": "api-key-1234567890",
+        "ATHENA_CLIENT": "xxxx",
+        "READ_ONLY": "false"
       }
     }
   }
@@ -113,30 +121,31 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 
 ## Tools
 
-| Tool | Description |
-|------|-------------|
-| `list_tables` | List all tables in the connected database |
-| `list_extensions` | List all installed PostgreSQL extensions |
-| `list_migrations` | List applied database migrations |
-| `apply_migration` | Apply a SQL migration (blocked in read-only mode) |
-| `execute_sql` | Execute a raw SQL query (write operations blocked in read-only mode) |
-| `get_logs` | Retrieve recent database / application logs |
+| Tool              | Description                                                          |
+| ----------------- | -------------------------------------------------------------------- |
+| `list_tables`     | List all tables in the connected database                            |
+| `list_extensions` | List all installed PostgreSQL extensions                             |
+| `list_migrations` | List applied database migrations                                     |
+| `apply_migration` | Apply a SQL migration (blocked in read-only mode)                    |
+| `execute_sql`     | Execute a raw SQL query (write operations blocked in read-only mode) |
+| `get_logs`        | Retrieve recent database / application logs                          |
 
 ## Configuration
 
 Set the following environment variables before starting the server:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `ATHENA_BASE_URL` | Base URL of the Athena API | `https://mcp.athena-db.com` |
-| `ATHENA_API_KEY` | API key (sent as `apikey` / `x-api-key` headers) | _(empty)_ |
-| `ATHENA_CLIENT` | Value for the `X-Athena-Client` API header (e.g. `postgresql`, `supabase`) | `postgresql` |
-| `READ_ONLY` | Set to `true` to disable write operations | `false` |
-| `HEALTH_PORT` | Port for HTTP health server (GET /health returns version). Omit to disable | _(disabled)_ |
+| Variable          | Description                                                                | Default                     |
+| ----------------- | -------------------------------------------------------------------------- | --------------------------- |
+| `ATHENA_BASE_URL` | Base URL of the Athena API                                                 | `https://mcp.athena-db.com` |
+| `ATHENA_API_KEY`  | API key (sent as `apikey` / `x-api-key` headers)                           | _(empty)_                   |
+| `ATHENA_CLIENT`   | Value for the `X-Athena-Client` API header (e.g. `postgresql`, `supabase`) | `postgresql`                |
+| `READ_ONLY`       | Set to `true` to disable write operations                                  | `false`                     |
+| `HEALTH_PORT`     | Port for HTTP health server (GET /health returns version). Omit to disable | _(disabled)_                |
 
 ### Read-only mode
 
 When `READ_ONLY=true`:
+
 - `apply_migration` returns an error immediately.
 - `execute_sql` rejects queries containing write keywords (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ALTER`, `TRUNCATE`, `GRANT`, `REVOKE`, `REPLACE`).
 
