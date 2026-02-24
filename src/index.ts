@@ -101,7 +101,7 @@ function parseTableRef(table: string, defaultSchema?: string): TableRef {
   }
 
   const tableName = sanitizeIdentifier(table, "table");
-  const qualified = `${schemaDefault}.${tableName}`;
+  const qualified = schemaDefault === "public" ? tableName : `${schemaDefault}.${tableName}`;
   return {
     schema: schemaDefault,
     table: tableName,
