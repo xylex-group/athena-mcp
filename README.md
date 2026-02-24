@@ -2,6 +2,35 @@
 
 MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Athena's PostgreSQL management API as MCP tools for use with LLM agents and AI coding assistants.
 
+## Tool calls
+
+- [x] `search_columns`: Find tables and columns by name pattern
+- [x] `list_all_table_metadata`: Return metadata for all tables in one call: schema, name, columns, types, defaults, nullabe
+- [x] `list_tables`: List all tables available in the connected database
+- [x] `list_extensions`: List all postgreSQL installed extensions
+- [x] `execute_sql`: Execute raq SQL query, write is blocked when `read_only` mode is enabled
+- [x] `get_columns_of_table`: Describe columns for a table using Athena's schema API
+- [x] `list_table_metadata`: Returns the full metadata for a table: schema_name, table_name and each column's name, type, default value and nullable flag
+- [x] `list_schemas`: List database schemas visible to the current client
+- [x] `list_views`: List views that are visible and optionally materialized views using Athena's schema API
+- [x] `list_foreign_keys`: List primary keys, foreign keys and unique constraints for a table, essential for understanding relationships and correct joins
+- [x] `get_table_sample`: Sample rows from a table to understand it's data shape. Quick alternative to writing SQL
+- [x] `list_indexes`: List index definitions for a table
+
+**Experimental**
+
+- [ ] `list_migrations`: List all migrations (relies on the table)
+- [ ] `apply_migration`: Apply a SQL migration against a connected DB, blocked when `read_only` mode is enabled
+- [ ] `get_logs`: Retrieve recent database logs (relies on table `logs`)
+
+**Untested**
+
+- [ ] `get_row_by_id`: Fetch rows by primary key column value. Simplifies the common fetch-by-id use case
+- [ ] `insert_row`: Insert a row into a table. Blocked when `read_only` mode is enabled
+- [ ] `update_row`: Updates rows matching a condition. Blocked when `read_only` mode is enabled
+- [ ] `delete_row`: Delete a row by primary key (resource_id). Blocked when `read_only` mode is enabled
+- [ ] `get_rows_by_eq_column_of_table`: Fetch rows from a table where `column = value` using Athena's fetch endpoint
+
 ## Install
 
 ```bash
@@ -121,28 +150,28 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 
 ## Tools
 
-| Tool                           | Description                                                          |
-| ------------------------------ | -------------------------------------------------------------------- |
-| `list_tables`                  | List all tables in the connected database                            |
-| `list_extensions`              | List all installed PostgreSQL extensions                             |
-| `list_migrations`              | List applied database migrations                                     |
-| `apply_migration`              | Apply a SQL migration (blocked in read-only mode)                     |
-| `execute_sql`                  | Execute a raw SQL query (write operations blocked in read-only mode)  |
-| `get_logs`                     | Retrieve recent database / application logs                          |
-| `get_columns_of_table`         | Get column metadata (types, defaults, nullability) for a table        |
-| `list_table_metadata`          | Full table metadata: schema, columns, types, defaults, nullable      |
-| `list_schemas`                 | List all schemas in the database                                      |
-| `list_views`                   | List all views (optionally include materialized views)                |
-| `get_row_by_eq_column_of_table` | Look up row(s) where a column equals a value (e.g. user_id=123)     |
-| `list_foreign_keys`            | List primary keys, foreign keys, and unique constraints               |
-| `get_table_sample`             | Sample rows from a table to understand data shape                    |
-| `list_indexes`                 | List index definitions for a table                                   |
-| `search_columns`               | Find tables and columns by name pattern                               |
-| `get_row_by_id`                | Fetch rows by primary key value (default column: id)                  |
-| `list_all_table_metadata`      | Metadata for all tables in one call                                  |
-| `insert_row`                   | Insert a row (blocked in read-only mode)                             |
-| `delete_row`                   | Delete a row by primary key (blocked in read-only mode)               |
-| `update_row`                   | Update rows matching a condition (blocked in read-only mode)          |
+| Tool                            | Description                                                          |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `list_tables`                   | List all tables in the connected database                            |
+| `list_extensions`               | List all installed PostgreSQL extensions                             |
+| `list_migrations`               | List applied database migrations                                     |
+| `apply_migration`               | Apply a SQL migration (blocked in read-only mode)                    |
+| `execute_sql`                   | Execute a raw SQL query (write operations blocked in read-only mode) |
+| `get_logs`                      | Retrieve recent database / application logs                          |
+| `get_columns_of_table`          | Get column metadata (types, defaults, nullability) for a table       |
+| `list_table_metadata`           | Full table metadata: schema, columns, types, defaults, nullable      |
+| `list_schemas`                  | List all schemas in the database                                     |
+| `list_views`                    | List all views (optionally include materialized views)               |
+| `get_row_by_eq_column_of_table` | Look up row(s) where a column equals a value (e.g. user_id=123)      |
+| `list_foreign_keys`             | List primary keys, foreign keys, and unique constraints              |
+| `get_table_sample`              | Sample rows from a table to understand data shape                    |
+| `list_indexes`                  | List index definitions for a table                                   |
+| `search_columns`                | Find tables and columns by name pattern                              |
+| `get_row_by_id`                 | Fetch rows by primary key value (default column: id)                 |
+| `list_all_table_metadata`       | Metadata for all tables in one call                                  |
+| `insert_row`                    | Insert a row (blocked in read-only mode)                             |
+| `delete_row`                    | Delete a row by primary key (blocked in read-only mode)              |
+| `update_row`                    | Update rows matching a condition (blocked in read-only mode)         |
 
 Tool schemas are documented in [`mcp-tools.json`](mcp-tools.json) (MCP-native) and [`athena-mcp-openapi.yaml`](athena-mcp-openapi.yaml) (OpenAPI 3.0).
 
@@ -150,13 +179,13 @@ Tool schemas are documented in [`mcp-tools.json`](mcp-tools.json) (MCP-native) a
 
 Set the following environment variables before starting the server:
 
-| Variable          | Description                                                                | Default                     |
-| ----------------- | -------------------------------------------------------------------------- | --------------------------- |
-| `ATHENA_BASE_URL` | Base URL of the Athena API                                                 | `https://mirror3.athena-db.com` |
-| `ATHENA_API_KEY`  | API key (sent as `apikey` / `x-api-key` headers)                           | _(empty)_                   |
+| Variable          | Description                                                                      | Default                         |
+| ----------------- | -------------------------------------------------------------------------------- | ------------------------------- |
+| `ATHENA_BASE_URL` | Base URL of the Athena API                                                       | `https://mirror3.athena-db.com` |
+| `ATHENA_API_KEY`  | API key (sent as `apikey` / `x-api-key` headers)                                 | _(empty)_                       |
 | `ATHENA_CLIENT`   | Value for the `X-Athena-Client` API header (e.g. `railway_direct`, `postgresql`) | `railway_direct`                |
-| `READ_ONLY`       | Set to `true` to disable write operations                                  | `false`                     |
-| `HEALTH_PORT`     | Port for HTTP health server (GET /health returns version). Omit to disable | _(disabled)_                |
+| `READ_ONLY`       | Set to `true` to disable write operations                                        | `false`                         |
+| `HEALTH_PORT`     | Port for HTTP health server (GET /health returns version). Omit to disable       | _(disabled)_                    |
 
 ### Read-only mode
 

@@ -82,6 +82,21 @@ async function runQuery(sql: string): Promise<unknown> {
   });
 }
 
+async function getPrimaryKeyColumns(schema: string, table: string): Promise<Set<string>> {
+  try {
+    const schemaLit = schema.replace(/'/g, "''");
+    const tableLit = table.replace(/'/g, "''");
+    const rows = queryResultToArray(
+      await runQuery(
+        `SELECT kcu.column_name FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema AND tc.table_name = kcu.table_name WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema = '${schemaLit}' AND tc.table_name = '${tableLit}'`
+      )
+    ) as Array<{ column_name?: string }>;
+    return new Set(rows.map((r) => (r.column_name ?? "").toLowerCase()));
+  } catch {
+    return new Set();
+  }
+}
+
 function queryResultToArray(result: unknown): unknown[] {
   if (Array.isArray(result)) return result;
   if (result && typeof result === "object") {
@@ -319,11 +334,16 @@ server.tool(
   },
   async ({ table, schema }) => {
     const ref = parseTableRef(table, schema);
+    const pkColumns = await getPrimaryKeyColumns(ref.schema, ref.table);
     const data = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`)) as {
       columns?: Array<Record<string, unknown>>;
     };
     if (Array.isArray(data?.columns) && data.columns.length > 0) {
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      const columns = data.columns.map((c) => ({
+        ...c,
+        primary_key: pkColumns.has((String(c.column_name ?? "")).toLowerCase()),
+      }));
+      return { content: [{ type: "text", text: JSON.stringify({ columns }, null, 2) }] };
     }
     try {
       const schemaLit = ref.schema.replace(/'/g, "''");
@@ -338,6 +358,7 @@ server.tool(
         data_type: r.data_type,
         column_default: r.column_default,
         is_nullable: r.is_nullable,
+        primary_key: pkColumns.has((String(r.column_name ?? "")).toLowerCase()),
       }));
       return { content: [{ type: "text", text: JSON.stringify({ columns }, null, 2) }] };
     } catch {
@@ -357,6 +378,7 @@ server.tool(
   },
   async ({ table, schema }) => {
     const ref = parseTableRef(table, schema);
+    const pkColumns = await getPrimaryKeyColumns(ref.schema, ref.table);
     const raw = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`)) as {
       columns?: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string | null }>;
     };
@@ -384,6 +406,7 @@ server.tool(
         type: c.data_type ?? "unknown",
         nullable: (c.is_nullable ?? "YES").toUpperCase() === "YES",
         default: c.column_default ?? null,
+        primary_key: pkColumns.has((c.column_name ?? "").toLowerCase()),
       })) : [],
     };
     return { content: [{ type: "text", text: JSON.stringify(metadata, null, 2) }] };
@@ -646,11 +669,13 @@ server.tool(
     const filtered = schema
       ? tables.filter((t) => (t.table_schema ?? "") === schema)
       : tables.filter((t) => !(t.table_schema ?? "").startsWith("pg_") && (t.table_schema ?? "") !== "information_schema");
-    const metadata: Array<{ schema: string; table: string; columns: Array<{ name: string; type: string; nullable: boolean; default: string | null }> }> = [];
+    const metadata: Array<{ schema: string; table: string; columns: Array<{ name: string; type: string; nullable: boolean; default: string | null; primary_key: boolean }> }> = [];
     for (const t of filtered) {
+      const tableSchema = t.table_schema ?? "public";
       const tableNameForApi = t.table_name ?? "";
-      const schemaLit = (t.table_schema ?? "public").replace(/'/g, "''");
+      const schemaLit = tableSchema.replace(/'/g, "''");
       const tableLit = tableNameForApi.replace(/'/g, "''");
+      const pkColumns = await getPrimaryKeyColumns(tableSchema, tableNameForApi);
       let cols: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }> = [];
       try {
         const colData = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(tableNameForApi)}`)) as {
@@ -680,6 +705,7 @@ server.tool(
           type: c.data_type ?? "unknown",
           nullable: (c.is_nullable ?? "YES").toUpperCase() === "YES",
           default: c.column_default ?? null,
+          primary_key: pkColumns.has((c.column_name ?? "").toLowerCase()),
         })) : [],
       });
     }
