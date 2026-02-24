@@ -27,7 +27,7 @@ const VERSION = getVersion();
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
-const BASE_URL = process.env.ATHENA_BASE_URL ?? "https://mcp.athena-db.com";
+const BASE_URL = process.env.ATHENA_BASE_URL ?? "https://pool.athena-db.com";
 const API_KEY = process.env.ATHENA_API_KEY ?? "";
 const ATHENA_CLIENT = process.env.ATHENA_CLIENT ?? "postgresql";
 const READ_ONLY = process.env.READ_ONLY === "true";

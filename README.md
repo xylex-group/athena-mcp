@@ -140,7 +140,7 @@ Set the following environment variables before starting the server:
 
 | Variable          | Description                                                                | Default                     |
 | ----------------- | -------------------------------------------------------------------------- | --------------------------- |
-| `ATHENA_BASE_URL` | Base URL of the Athena API                                                 | `https://mcp.athena-db.com` |
+| `ATHENA_BASE_URL` | Base URL of the Athena API                                                 | `https://pool.athena-db.com` |
 | `ATHENA_API_KEY`  | API key (sent as `apikey` / `x-api-key` headers)                           | _(empty)_                   |
 | `ATHENA_CLIENT`   | Value for the `X-Athena-Client` API header (e.g. `postgresql`, `supabase`) | `postgresql`                |
 | `READ_ONLY`       | Set to `true` to disable write operations                                  | `false`                     |
