@@ -81,6 +81,17 @@ async function runQuery(sql: string): Promise<unknown> {
   });
 }
 
+function queryResultToArray(result: unknown): unknown[] {
+  if (Array.isArray(result)) return result;
+  if (result && typeof result === "object") {
+    const r = result as Record<string, unknown>;
+    if (Array.isArray(r.rows)) return r.rows;
+    if (Array.isArray(r.data)) return r.data;
+    if (Array.isArray(r.result)) return r.result;
+  }
+  return [];
+}
+
 interface TableRef {
   schema: string;
   table: string;
@@ -315,9 +326,11 @@ server.tool(
     try {
       const schemaLit = ref.schema.replace(/'/g, "''");
       const tableLit = ref.table.replace(/'/g, "''");
-      const rows = (await runQuery(
-        `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
-      )) as Array<Record<string, unknown>>;
+      const rows = queryResultToArray(
+        await runQuery(
+          `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
+        )
+      ) as Array<Record<string, unknown>>;
       const columns = rows.map((r) => ({
         column_name: r.column_name,
         data_type: r.data_type,
@@ -350,9 +363,11 @@ server.tool(
       try {
         const schemaLit = ref.schema.replace(/'/g, "''");
         const tableLit = ref.table.replace(/'/g, "''");
-        const rows = (await runQuery(
-          `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
-        )) as Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
+        const rows = queryResultToArray(
+          await runQuery(
+            `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
+          )
+        ) as Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
         columns = rows;
       } catch {
         columns = [];
@@ -362,12 +377,12 @@ server.tool(
       schema: ref.schema,
       table: ref.table,
       qualified: ref.qualified,
-      columns: columns.map((c) => ({
+      columns: Array.isArray(columns) ? columns.map((c) => ({
         name: c.column_name ?? "",
         type: c.data_type ?? "unknown",
         nullable: (c.is_nullable ?? "YES").toUpperCase() === "YES",
         default: c.column_default ?? null,
-      })),
+      })) : [],
     };
     return { content: [{ type: "text", text: JSON.stringify(metadata, null, 2) }] };
   }
@@ -510,9 +525,11 @@ server.tool(
     const schemaLit = ref.schema.replace(/'/g, "''");
     const tableLit = ref.table.replace(/'/g, "''");
     try {
-      const raw = (await runQuery(
-        `SELECT indexname AS index_name, indexdef AS index_def FROM pg_indexes WHERE schemaname = '${schemaLit}' AND tablename = '${tableLit}' ORDER BY indexname`
-      )) as Array<Record<string, unknown>>;
+      const raw = queryResultToArray(
+        await runQuery(
+          `SELECT indexname AS index_name, indexdef AS index_def FROM pg_indexes WHERE schemaname = '${schemaLit}' AND tablename = '${tableLit}' ORDER BY indexname`
+        )
+      ) as Array<Record<string, unknown>>;
       const data = raw.map((r) => ({ index_name: r.index_name, index_def: r.index_def }));
       return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
     } catch {
@@ -643,9 +660,11 @@ server.tool(
       }
       if (cols.length === 0) {
         try {
-          const rows = (await runQuery(
-            `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
-          )) as Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
+          const rows = queryResultToArray(
+            await runQuery(
+              `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
+            )
+          ) as Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
           cols = rows;
         } catch {
           cols = [];
@@ -654,12 +673,12 @@ server.tool(
       metadata.push({
         schema: t.table_schema ?? "",
         table: t.table_name ?? "",
-        columns: cols.map((c) => ({
+        columns: Array.isArray(cols) ? cols.map((c) => ({
           name: c.column_name ?? "",
           type: c.data_type ?? "unknown",
           nullable: (c.is_nullable ?? "YES").toUpperCase() === "YES",
           default: c.column_default ?? null,
-        })),
+        })) : [],
       });
     }
     metadata.sort((a, b) => `${a.schema}.${a.table}`.localeCompare(`${b.schema}.${b.table}`));
