@@ -306,10 +306,28 @@ server.tool(
   },
   async ({ table, schema }) => {
     const ref = parseTableRef(table, schema);
-    const data = await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`);
-    return {
-      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    const data = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`)) as {
+      columns?: Array<Record<string, unknown>>;
     };
+    if (Array.isArray(data?.columns) && data.columns.length > 0) {
+      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+    }
+    try {
+      const schemaLit = ref.schema.replace(/'/g, "''");
+      const tableLit = ref.table.replace(/'/g, "''");
+      const rows = (await runQuery(
+        `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
+      )) as Array<Record<string, unknown>>;
+      const columns = rows.map((r) => ({
+        column_name: r.column_name,
+        data_type: r.data_type,
+        column_default: r.column_default,
+        is_nullable: r.is_nullable,
+      }));
+      return { content: [{ type: "text", text: JSON.stringify({ columns }, null, 2) }] };
+    } catch {
+      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+    }
   }
 );
 
@@ -324,11 +342,22 @@ server.tool(
   },
   async ({ table, schema }) => {
     const ref = parseTableRef(table, schema);
-    const raw = await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`);
-
-    const data = raw as { columns?: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string | null }> };
-    const columns = Array.isArray(data?.columns) ? data.columns : [];
-
+    const raw = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`)) as {
+      columns?: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string | null }>;
+    };
+    let columns = Array.isArray(raw?.columns) ? raw.columns : [];
+    if (columns.length === 0) {
+      try {
+        const schemaLit = ref.schema.replace(/'/g, "''");
+        const tableLit = ref.table.replace(/'/g, "''");
+        const rows = (await runQuery(
+          `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
+        )) as Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
+        columns = rows;
+      } catch {
+        columns = [];
+      }
+    }
     const metadata = {
       schema: ref.schema,
       table: ref.table,
@@ -340,10 +369,7 @@ server.tool(
         default: c.column_default ?? null,
       })),
     };
-
-    return {
-      content: [{ type: "text", text: JSON.stringify(metadata, null, 2) }],
-    };
+    return { content: [{ type: "text", text: JSON.stringify(metadata, null, 2) }] };
   }
 );
 
@@ -484,9 +510,10 @@ server.tool(
     const schemaLit = ref.schema.replace(/'/g, "''");
     const tableLit = ref.table.replace(/'/g, "''");
     try {
-      const data = await runQuery(
-        `SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = '${schemaLit}' AND tablename = '${tableLit}' ORDER BY indexname`
-      );
+      const raw = (await runQuery(
+        `SELECT indexname AS index_name, indexdef AS index_def FROM pg_indexes WHERE schemaname = '${schemaLit}' AND tablename = '${tableLit}' ORDER BY indexname`
+      )) as Array<Record<string, unknown>>;
+      const data = raw.map((r) => ({ index_name: r.index_name, index_def: r.index_def }));
       return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
     } catch {
       return {
@@ -602,11 +629,28 @@ server.tool(
       : tables.filter((t) => !(t.table_schema ?? "").startsWith("pg_") && (t.table_schema ?? "") !== "information_schema");
     const metadata: Array<{ schema: string; table: string; columns: Array<{ name: string; type: string; nullable: boolean; default: string | null }> }> = [];
     for (const t of filtered) {
-      const qualified = `${t.table_schema}.${t.table_name}`;
-      const colData = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(qualified)}`)) as {
-        columns?: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
-      };
-      const cols = Array.isArray(colData?.columns) ? colData.columns : [];
+      const tableNameForApi = t.table_name ?? "";
+      const schemaLit = (t.table_schema ?? "public").replace(/'/g, "''");
+      const tableLit = tableNameForApi.replace(/'/g, "''");
+      let cols: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }> = [];
+      try {
+        const colData = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(tableNameForApi)}`)) as {
+          columns?: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
+        };
+        cols = Array.isArray(colData?.columns) ? colData.columns : [];
+      } catch {
+        cols = [];
+      }
+      if (cols.length === 0) {
+        try {
+          const rows = (await runQuery(
+            `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
+          )) as Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
+          cols = rows;
+        } catch {
+          cols = [];
+        }
+      }
       metadata.push({
         schema: t.table_schema ?? "",
         table: t.table_name ?? "",

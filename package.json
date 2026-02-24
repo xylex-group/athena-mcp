@@ -1,6 +1,6 @@
 {
   "name": "@xylex-group/athena-mcp",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "MCP server for the Athena",
   "main": "dist/index.js",
   "displayName": "Athena MCP",
