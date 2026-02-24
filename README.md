@@ -152,9 +152,9 @@ Set the following environment variables before starting the server:
 
 | Variable          | Description                                                                | Default                     |
 | ----------------- | -------------------------------------------------------------------------- | --------------------------- |
-| `ATHENA_BASE_URL` | Base URL of the Athena API                                                 | `https://pool.athena-db.com` |
+| `ATHENA_BASE_URL` | Base URL of the Athena API                                                 | `https://mirror3.athena-db.com` |
 | `ATHENA_API_KEY`  | API key (sent as `apikey` / `x-api-key` headers)                           | _(empty)_                   |
-| `ATHENA_CLIENT`   | Value for the `X-Athena-Client` API header (e.g. `postgresql`, `supabase`) | `postgresql`                |
+| `ATHENA_CLIENT`   | Value for the `X-Athena-Client` API header (e.g. `railway_direct`, `postgresql`) | `railway_direct`                |
 | `READ_ONLY`       | Set to `true` to disable write operations                                  | `false`                     |
 | `HEALTH_PORT`     | Port for HTTP health server (GET /health returns version). Omit to disable | _(disabled)_                |
 
