@@ -2,6 +2,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { sanitizeIdentifier } from "./identifier.js";
+import { isWriteQuery } from "./query.js";
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -16,16 +18,6 @@ interface FetchOptions {
   method?: string;
   headers?: Record<string, string>;
   body?: unknown;
-}
-
-// Allow alphanumeric, underscores, dots, and dollar signs; optional schema prefix
-const IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_$.]*(\.[a-zA-Z_][a-zA-Z0-9_$.]*)?$/;
-
-function sanitizeIdentifier(name: string, label: string): string {
-  if (!IDENTIFIER_RE.test(name)) {
-    throw new Error(`Invalid ${label}: "${name}". Only alphanumeric characters, underscores, dots, and dollar signs are allowed.`);
-  }
-  return name;
 }
 
 async function apiFetch(path: string, opts: FetchOptions = {}): Promise<unknown> {
@@ -178,9 +170,7 @@ server.tool(
   },
   async ({ query, driver, db_name }) => {
     if (READ_ONLY) {
-      const writePattern =
-        /\b(INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE|GRANT|REVOKE|REPLACE)\b/i;
-      if (writePattern.test(query)) {
+      if (isWriteQuery(query)) {
         return {
           isError: true,
           content: [

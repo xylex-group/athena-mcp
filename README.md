@@ -55,3 +55,10 @@ npm install
 npm run build
 npm start
 ```
+
+### Testing
+
+```bash
+npm run test        # Run tests once
+npm run test:watch  # Run tests in watch mode
+```
