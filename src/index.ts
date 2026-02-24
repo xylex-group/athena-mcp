@@ -300,6 +300,40 @@ server.tool(
   }
 );
 
+// ─── Tool: list_table_metadata ────────────────────────────────────────────
+
+server.tool(
+  "list_table_metadata",
+  "Return the full metadata for a table: schema name, table name, and each column's name, type, default value, and nullable flag",
+  {
+    table: z.string().describe("Table name (optionally schema-qualified)"),
+    schema: z.string().optional().describe("Optional schema name when the table name is not schema-qualified"),
+  },
+  async ({ table, schema }) => {
+    const ref = parseTableRef(table, schema);
+    const raw = await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`);
+
+    const data = raw as { columns?: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string | null }> };
+    const columns = Array.isArray(data?.columns) ? data.columns : [];
+
+    const metadata = {
+      schema: ref.schema,
+      table: ref.table,
+      qualified: ref.qualified,
+      columns: columns.map((c) => ({
+        name: c.column_name ?? "",
+        type: c.data_type ?? "unknown",
+        nullable: (c.is_nullable ?? "YES").toUpperCase() === "YES",
+        default: c.column_default ?? null,
+      })),
+    };
+
+    return {
+      content: [{ type: "text", text: JSON.stringify(metadata, null, 2) }],
+    };
+  }
+);
+
 // ─── Tool: list_schemas ───────────────────────────────────────────────────
 
 server.tool(

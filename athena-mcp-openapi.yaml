@@ -1,0 +1,318 @@
+openapi: 3.0.3
+info:
+  title: Athena MCP Tools
+  version: 0.1.0
+  description: |
+    MCP tool definitions for the Athena MCP server. Each tool is exposed over
+    POST endpoints so OpenAPI-aware clients can understand the tool inputs and
+    outputs before invoking the corresponding MCP methods.
+servers:
+- url: https://athena-mcp.example.com/tools
+paths:
+  /tools/list_tables:
+    post:
+      summary: List all tables
+      description: No arguments are required.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_extensions:
+    post:
+      summary: List installed PostgreSQL extensions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_migrations:
+    post:
+      summary: List applied database migrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListMigrationsRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/apply_migration:
+    post:
+      summary: Apply a SQL migration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyMigrationRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/execute_sql:
+    post:
+      summary: Execute an arbitrary SQL query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteSqlRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_logs:
+    post:
+      summary: Retrieve recent logs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetLogsRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_columns_of_table:
+    post:
+      summary: Describe columns using Athena's schema API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetColumnsRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_table_metadata:
+    post:
+      summary: Return table metadata plus column defaults and nullability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListTableMetadataRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_schemas:
+    post:
+      summary: List visible database schemas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListSchemasRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_views:
+    post:
+      summary: List visible views and materialized views
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListViewsRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_row_by_eq_column_of_table:
+    post:
+      summary: Fetch rows for column equality conditions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetRowByEqColumnRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+components:
+  schemas:
+    EmptyRequest:
+      type: object
+      description: Tool that does not accept arguments
+      properties: {}
+    ListMigrationsRequest:
+      type: object
+      properties:
+        table_name:
+          type: string
+          description: Migrations table name (defaults to 'schema_migrations')
+      required: []
+    ApplyMigrationRequest:
+      type: object
+      properties:
+        sql:
+          type: string
+          description: SQL migration to execute
+        name:
+          type: string
+          description: Optional migration name or label
+      required:
+      - sql
+    ExecuteSqlRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          description: Raw SQL query to execute
+        driver:
+          type: string
+          enum: [ athena, postgresql, supabase ]
+          description: Driver to use (defaults to 'postgresql')
+        db_name:
+          type: string
+          description: Optional database name for /query/sql
+      required:
+      - query
+    GetLogsRequest:
+      type: object
+      properties:
+        table_name:
+          type: string
+          description: Logs table name (defaults to 'logs')
+        limit:
+          type: integer
+          minimum: 1
+          description: Maximum number of log rows to return (defaults to 100)
+        level:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: Filter by log level (e.g. 'error', 'warn', 'info')
+    GetColumnsRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name (optionally schema-qualified) to describe
+        schema:
+          type: string
+          description: Optional schema name when the table name is not schema-qualified
+      required:
+      - table
+    ListTableMetadataRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name (optionally schema-qualified)
+        schema:
+          type: string
+          description: Optional schema name when the table name is not schema-qualified
+      required:
+      - table
+    ListSchemasRequest:
+      type: object
+      properties:
+        include_system:
+          type: boolean
+          description: Include pg_catalog and information_schema
+    ListViewsRequest:
+      type: object
+      properties:
+        schema:
+          type: string
+          description: Schema to limit view lookup
+        include_materialized:
+          type: boolean
+          description: Include materialized views defined in pg_matviews
+    GetRowByEqColumnRequest:
+      type: object
+      properties:
+        table:
+          type: string
+          description: Table name to query (optionally schema-qualified)
+        column:
+          type: string
+          description: Column name to match against
+        value:
+          oneOf:
+          - type: string
+          - type: number
+          - type: boolean
+          description: Value to compare (converted to string for Athena)
+        schema:
+          type: string
+          description: Optional schema to override the table name
+        limit:
+          type: integer
+          minimum: 1
+          description: Maximum number of rows to return (defaults to 100)
+      required:
+      - table
+      - column
+      - value
+    ToolResult:
+      type: object
+      properties:
+        content:
+          type: array
+          description: Content messages emitted by the tool (text/images/resources)
+          items:
+            $ref: '#/components/schemas/ToolContent'
+        isError:
+          type: boolean
+          description: True when the tool execution failed
+    ToolContent:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Content type (e.g. text, image, resource)
+        text:
+          type: string
+          description: Textual result (available when type is text)

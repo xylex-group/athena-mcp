@@ -1,0 +1,204 @@
+{
+  "tools": [
+    {
+      "name": "list_tables",
+      "description": "List all tables available in the connected PostgreSQL database",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "list_extensions",
+      "description": "List all installed PostgreSQL extensions",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "list_migrations",
+      "description": "List applied database migrations",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table_name": {
+            "type": "string",
+            "description": "Migrations table name (defaults to 'schema_migrations')"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "apply_migration",
+      "description": "Apply a SQL migration against the connected database",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "The SQL migration to execute"
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional migration name or label"
+          }
+        },
+        "required": ["sql"]
+      }
+    },
+    {
+      "name": "execute_sql",
+      "description": "Execute a raw SQL query against the connected database",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The SQL query to execute"
+          },
+          "driver": {
+            "type": "string",
+            "enum": ["athena", "postgresql", "supabase"],
+            "description": "Driver to use (defaults to 'postgresql')"
+          },
+          "db_name": {
+            "type": "string",
+            "description": "Optional database name (used by /query/sql)"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "get_logs",
+      "description": "Retrieve recent database or application logs",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table_name": {
+            "type": "string",
+            "description": "Logs table name (defaults to 'logs')"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum number of log rows to return (defaults to 100)"
+          },
+          "level": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "Filter by log level (e.g. 'error', 'warn', 'info')"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "get_columns_of_table",
+      "description": "Describe columns for a table using Athena's schema API",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Table name (optionally schema-qualified) to describe"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema name when the table name is not schema-qualified"
+          }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "list_table_metadata",
+      "description": "Return schema/table metadata plus column defaults and nullability",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Table name (optionally schema-qualified)"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema name when the table name is not schema-qualified"
+          }
+        },
+        "required": ["table"]
+      }
+    },
+    {
+      "name": "list_schemas",
+      "description": "List database schemas visible to the current Athena client",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "include_system": {
+            "type": "boolean",
+            "description": "Include pg_catalog and information_schema schemas"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "list_views",
+      "description": "List visible views (and optionally materialized views)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "description": "Schema to limit the view lookup to"
+          },
+          "include_materialized": {
+            "type": "boolean",
+            "description": "Include materialized views defined in pg_matviews"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "get_row_by_eq_column_of_table",
+      "description": "Fetch rows where a column equals a value using Athena's fetch endpoint",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Table name to query (optionally schema-qualified)"
+          },
+          "column": {
+            "type": "string",
+            "description": "Column name to match against"
+          },
+          "value": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" }
+            ],
+            "description": "Value to compare (converted to string for Athena)"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema to override the table name"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum number of rows to return (defaults to 100)"
+          }
+        },
+        "required": ["table", "column", "value"]
+      }
+    }
+  ]
+}
