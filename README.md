@@ -44,7 +44,13 @@ npx -y --package=git+https://github.com/xylex-group/athena-mcp.git athena-mcp --
 Or run without installing:
 
 ```bash
-npx @xylex-group/athena-mcp
+npx -y --package=git+https://github.com/xylex-group/athena-mcp.git athena-mcp
+```
+
+Or from npm:
+
+```bash
+npx -y @xylex-group/athena-mcp
 ```
 
 ## Adding to AI coding assistants
@@ -56,7 +62,7 @@ npx @xylex-group/athena-mcp
    - **Name:** `athena`
    - **Type:** Command
    - **Command:** `npx`
-   - **Args:** `@xylex-group/athena-mcp`
+   - **Args:** `-y`, `--package=git+https://github.com/xylex-group/athena-mcp.git`, `athena-mcp`
    - **Env:** Add `ATHENA_API_KEY`, `ATHENA_CLIENT` (for X-Athena-Client header), `READ_ONLY`, etc.
 
 Or add to `.cursor/mcp.json` in your project:
@@ -69,11 +75,27 @@ Or add to `.cursor/mcp.json` in your project:
       "args": [
         "-y",
         "--package=git+https://github.com/xylex-group/athena-mcp.git",
-        "athena-mcp"
-      ],
+        "athena-mcp",
+        "--athena-api-key=api-key-1234567890",
+        "--athena-client=railway_direct",
+        "--read-only=false"
+      ]
+    }
+  }
+}
+```
+
+Or use env (good for secrets):
+
+```json
+{
+  "mcpServers": {
+    "athena": {
+      "command": "npx",
+      "args": ["-y", "--package=git+https://github.com/xylex-group/athena-mcp.git", "athena-mcp"],
       "env": {
         "ATHENA_API_KEY": "api-key-1234567890",
-        "ATHENA_CLIENT": "xxxx",
+        "ATHENA_CLIENT": "railway_direct",
         "READ_ONLY": "false"
       }
     }
@@ -98,10 +120,14 @@ VSCode supports MCP through extensions like **Continue** or through the native *
   "mcpServers": {
     "athena": {
       "command": "npx",
-      "args": ["@xylex-group/athena-mcp"],
+      "args": [
+        "-y",
+        "--package=git+https://github.com/xylex-group/athena-mcp.git",
+        "athena-mcp"
+      ],
       "env": {
         "ATHENA_API_KEY": "<your-api-key>",
-        "ATHENA_CLIENT": "postgresql",
+        "ATHENA_CLIENT": "railway_direct",
         "READ_ONLY": "true"
       }
     }
@@ -126,10 +152,14 @@ If you have access to GitHub Copilot's MCP features:
       "servers": {
         "athena": {
           "command": "npx",
-          "args": ["@xylex-group/athena-mcp"],
+          "args": [
+            "-y",
+            "--package=git+https://github.com/xylex-group/athena-mcp.git",
+            "athena-mcp"
+          ],
           "env": {
             "ATHENA_API_KEY": "<your-api-key>",
-            "ATHENA_CLIENT": "postgresql",
+            "ATHENA_CLIENT": "railway_direct",
             "READ_ONLY": "true"
           }
         }
@@ -146,7 +176,7 @@ Reload VSCode after making changes.
 Add the server via CLI:
 
 ```bash
-claude mcp add athena -- npx @xylex-group/athena-mcp
+claude mcp add athena -- npx -y --package=git+https://github.com/xylex-group/athena-mcp.git athena-mcp
 ```
 
 Or edit the config file directly:
@@ -159,10 +189,14 @@ Or edit the config file directly:
   "mcpServers": {
     "athena": {
       "command": "npx",
-      "args": ["@xylex-group/athena-mcp"],
+      "args": [
+        "-y",
+        "--package=git+https://github.com/xylex-group/athena-mcp.git",
+        "athena-mcp"
+      ],
       "env": {
         "ATHENA_API_KEY": "<your-api-key>",
-        "ATHENA_CLIENT": "postgresql",
+        "ATHENA_CLIENT": "railway_direct",
         "READ_ONLY": "true"
       }
     }
@@ -170,7 +204,7 @@ Or edit the config file directly:
 }
 ```
 
-For project scope, create `.mcp.json` in your project root and run `claude mcp add --scope project athena -- npx @xylex-group/athena-mcp`.
+For project scope, create `.mcp.json` in your project root and run `claude mcp add --scope project athena -- npx -y --package=git+https://github.com/xylex-group/athena-mcp.git athena-mcp`.
 
 ### Windsurf
 
@@ -182,10 +216,14 @@ For project scope, create `.mcp.json` in your project root and run `claude mcp a
   "mcpServers": {
     "athena": {
       "command": "npx",
-      "args": ["@xylex-group/athena-mcp"],
+      "args": [
+        "-y",
+        "--package=git+https://github.com/xylex-group/athena-mcp.git",
+        "athena-mcp"
+      ],
       "env": {
         "ATHENA_API_KEY": "<your-api-key>",
-        "ATHENA_CLIENT": "postgresql",
+        "ATHENA_CLIENT": "railway_direct",
         "READ_ONLY": "true"
       }
     }
@@ -201,7 +239,7 @@ For project scope, create `.mcp.json` in your project root and run `claude mcp a
 2. Add a custom server with:
    - **Name:** `athena`
    - **Command:** `npx`
-   - **Args:** `@xylex-group/athena-mcp`
+   - **Args:** `-y`, `--package=git+https://github.com/xylex-group/athena-mcp.git`, `athena-mcp`
    - **Env:** `ATHENA_API_KEY`, `ATHENA_CLIENT`, `READ_ONLY`, etc.
 
 Or edit the MCP config JSON in Zed settings and add the same `athena` entry as above.
@@ -248,7 +286,13 @@ Set the following environment variables before starting the server:
 These can also be passed as CLI args (override env vars):
 
 ```bash
-npx @xylex-group/athena-mcp --athena-base-url=https://api.example.com --athena-api-key=xxx --athena-client=railway_direct --read-only
+npx -y --package=git+https://github.com/xylex-group/athena-mcp.git athena-mcp --athena-base-url=https://api.example.com --athena-api-key=xxx --athena-client=railway_direct --read-only
+```
+
+Or with the published package:
+
+```bash
+npx -y @xylex-group/athena-mcp --athena-base-url=https://api.example.com --athena-api-key=xxx --athena-client=railway_direct --read-only
 ```
 
 ### Read-only mode
@@ -267,10 +311,14 @@ Most MCP clients use this format:
   "mcpServers": {
     "athena": {
       "command": "npx",
-      "args": ["@xylex-group/athena-mcp"],
+      "args": [
+        "-y",
+        "--package=git+https://github.com/xylex-group/athena-mcp.git",
+        "athena-mcp"
+      ],
       "env": {
         "ATHENA_API_KEY": "<your-api-key>",
-        "ATHENA_CLIENT": "postgresql",
+        "ATHENA_CLIENT": "railway_direct",
         "READ_ONLY": "true"
       }
     }
