@@ -27,14 +27,54 @@ const VERSION = getVersion();
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
-const BASE_URL = process.env.ATHENA_BASE_URL ?? "https://mirror3.athena-db.com";
+function parseCliArgs(): {
+  baseUrl?: string;
+  apiKey?: string;
+  client?: string;
+  readOnly?: boolean;
+  healthPort?: number;
+} {
+  const out: ReturnType<typeof parseCliArgs> = {};
+  const argv = process.argv.slice(2);
+  const toKey = (s: string) => s.toLowerCase().replace(/-/g, "_");
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    const match = arg.match(/^--([a-zA-Z0-9_-]+)(?:=(.+))?$/);
+    if (!match) continue;
+    const key = toKey(match[1]);
+    const value = match[2] ?? argv[i + 1];
+    if (value !== undefined && !String(value).startsWith("--")) {
+      if (key === "read_only" || key === "readonly") {
+        out.readOnly = value === "true" || value === "1";
+      } else if (key === "health_port" || key === "healthport") {
+        out.healthPort = parseInt(String(value), 10);
+      } else if (key === "athena_base_url") {
+        out.baseUrl = String(value);
+      } else if (key === "athena_api_key") {
+        out.apiKey = String(value);
+      } else if (key === "athena_client") {
+        out.client = String(value);
+      }
+      if (!match[2] && value === argv[i + 1]) i++;
+    } else if (key === "read_only" || key === "readonly") {
+      out.readOnly = true;
+    }
+  }
+  return out;
+}
+
+const cli = parseCliArgs();
+
+const BASE_URL = (cli.baseUrl ?? process.env.ATHENA_BASE_URL ?? "https://mirror3.athena-db.com").trim();
 if (!BASE_URL.startsWith("http://") && !BASE_URL.startsWith("https://")) {
   throw new Error(`ATHENA_BASE_URL must start with http:// or https://, got: ${BASE_URL}`);
 }
-const API_KEY = process.env.ATHENA_API_KEY ?? "";
-const ATHENA_CLIENT = process.env.ATHENA_CLIENT ?? "railway_direct";
-const READ_ONLY = process.env.READ_ONLY === "true";
-const HEALTH_PORT = process.env.HEALTH_PORT ? parseInt(process.env.HEALTH_PORT, 10) : undefined;
+const API_KEY = (cli.apiKey ?? process.env.ATHENA_API_KEY ?? "").trim();
+const ATHENA_CLIENT = (cli.client ?? process.env.ATHENA_CLIENT ?? "railway_direct").trim();
+const READ_ONLY =
+  cli.readOnly !== undefined ? !!cli.readOnly : process.env.READ_ONLY === "true";
+const HEALTH_PORT =
+  cli.healthPort ?? (process.env.HEALTH_PORT ? parseInt(process.env.HEALTH_PORT, 10) : undefined);
 
 // ─── HTTP helpers ─────────────────────────────────────────────────────────────
 

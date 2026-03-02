@@ -245,6 +245,12 @@ Set the following environment variables before starting the server:
 | `READ_ONLY`       | Set to `true` to disable write operations                                        | `false`                         |
 | `HEALTH_PORT`     | Port for HTTP health server (GET /health returns version). Omit to disable       | _(disabled)_                    |
 
+These can also be passed as CLI args (override env vars):
+
+```bash
+npx @xylex-group/athena-mcp --athena-base-url=https://api.example.com --athena-api-key=xxx --athena-client=railway_direct --read-only
+```
+
 ### Read-only mode
 
 When `READ_ONLY=true`:
