@@ -83,6 +83,64 @@ Or add to `.cursor/mcp.json` in your project:
 
 Restart Cursor after changing the config.
 
+### VSCode
+
+VSCode supports MCP through extensions like **Continue** or through the native **GitHub Copilot** (if you have access to MCP features).
+
+#### Using Continue Extension
+
+1. Install the [Continue extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) from the VSCode marketplace
+2. Open Continue settings (click the Continue icon in the sidebar → settings gear)
+3. Add the MCP server to your `config.json`:
+
+```json
+{
+  "mcpServers": {
+    "athena": {
+      "command": "npx",
+      "args": ["@xylex-group/athena-mcp"],
+      "env": {
+        "ATHENA_API_KEY": "<your-api-key>",
+        "ATHENA_CLIENT": "postgresql",
+        "READ_ONLY": "true"
+      }
+    }
+  }
+}
+```
+
+#### Using GitHub Copilot (with MCP support)
+
+> **Note:** GitHub Copilot's MCP integration is evolving and may not yet be publicly available. The configuration structure shown below is illustrative and may differ from the actual implementation. Please check the [official GitHub Copilot documentation](https://docs.github.com/en/copilot) for the most current and accurate MCP setup instructions.
+
+If you have access to GitHub Copilot's MCP features:
+
+1. Open **VSCode Settings** → search for "MCP"
+2. Edit the MCP configuration file (typically `settings.json` or a dedicated MCP config)
+3. Add the athena server configuration (example structure):
+
+```json
+{
+  "github.copilot.advanced": {
+    "mcp": {
+      "servers": {
+        "athena": {
+          "command": "npx",
+          "args": ["@xylex-group/athena-mcp"],
+          "env": {
+            "ATHENA_API_KEY": "<your-api-key>",
+            "ATHENA_CLIENT": "postgresql",
+            "READ_ONLY": "true"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Reload VSCode after making changes.
+
 ### Claude Code
 
 Add the server via CLI:
