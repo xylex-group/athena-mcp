@@ -111,6 +111,8 @@ VSCode supports MCP through extensions like **Continue** or through the native *
 
 #### Using GitHub Copilot (with MCP support)
 
+> **Note:** GitHub Copilot's MCP integration is evolving. Check the [official GitHub Copilot documentation](https://docs.github.com/en/copilot) for the latest configuration instructions.
+
 If you have access to GitHub Copilot's MCP features:
 
 1. Open **VSCode Settings** → search for "MCP"
