@@ -16,7 +16,9 @@ import { isWriteQuery } from "./query.js";
 function getVersion(): string {
   try {
     const pkgPath = join(__dirname, "..", "package.json");
-    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as { version?: string };
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as {
+      version?: string;
+    };
     return pkg.version ?? "0.0.0";
   } catch {
     return "0.0.0";
@@ -65,16 +67,33 @@ function parseCliArgs(): {
 
 const cli = parseCliArgs();
 
-const BASE_URL = (cli.baseUrl ?? process.env.ATHENA_BASE_URL ?? "https://mirror3.athena-db.com").trim();
-if (!BASE_URL.startsWith("http://") && !BASE_URL.startsWith("https://")) {
-  throw new Error(`ATHENA_BASE_URL must start with http:// or https://, got: ${BASE_URL}`);
+const BASE_URL_RAW = (
+  cli.baseUrl ??
+  process.env.ATHENA_BASE_URL ??
+  "https://mirror3.athena-db.com"
+).trim();
+if (
+  !BASE_URL_RAW.startsWith("http://") &&
+  !BASE_URL_RAW.startsWith("https://")
+) {
+  throw new Error(
+    `ATHENA_BASE_URL must start with http:// or https://, got: ${BASE_URL_RAW}`,
+  );
 }
+const BASE_URL = BASE_URL_RAW.replace(/\/+$/, "");
 const API_KEY = (cli.apiKey ?? process.env.ATHENA_API_KEY ?? "").trim();
-const ATHENA_CLIENT = (cli.client ?? process.env.ATHENA_CLIENT ?? "railway_direct").trim();
+const ATHENA_CLIENT = (
+  cli.client ??
+  process.env.ATHENA_CLIENT ??
+  "railway_direct"
+).trim();
 const READ_ONLY =
-  cli.readOnly !== undefined ? !!cli.readOnly : process.env.READ_ONLY === "true";
+  cli.readOnly !== undefined
+    ? !!cli.readOnly
+    : process.env.READ_ONLY === "true";
 const HEALTH_PORT =
-  cli.healthPort ?? (process.env.HEALTH_PORT ? parseInt(process.env.HEALTH_PORT, 10) : undefined);
+  cli.healthPort ??
+  (process.env.HEALTH_PORT ? parseInt(process.env.HEALTH_PORT, 10) : undefined);
 
 // ─── HTTP helpers ─────────────────────────────────────────────────────────────
 
@@ -84,8 +103,12 @@ interface FetchOptions {
   body?: unknown;
 }
 
-async function apiFetch(path: string, opts: FetchOptions = {}): Promise<unknown> {
-  const url = `${BASE_URL}${path}`;
+async function apiFetch(
+  path: string,
+  opts: FetchOptions = {},
+): Promise<unknown> {
+  const normalizedPath = `/${path.replace(/^\/+/, "")}`;
+  const url = `${BASE_URL}${normalizedPath}`;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "X-Athena-Client": ATHENA_CLIENT,
@@ -108,7 +131,9 @@ async function apiFetch(path: string, opts: FetchOptions = {}): Promise<unknown>
   }
 
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${typeof data === "string" ? data : JSON.stringify(data)}`);
+    throw new Error(
+      `HTTP ${res.status}: ${typeof data === "string" ? data : JSON.stringify(data)}`,
+    );
   }
 
   return data;
@@ -122,14 +147,17 @@ async function runQuery(sql: string): Promise<unknown> {
   });
 }
 
-async function getPrimaryKeyColumns(schema: string, table: string): Promise<Set<string>> {
+async function getPrimaryKeyColumns(
+  schema: string,
+  table: string,
+): Promise<Set<string>> {
   try {
     const schemaLit = schema.replace(/'/g, "''");
     const tableLit = table.replace(/'/g, "''");
     const rows = queryResultToArray(
       await runQuery(
-        `SELECT kcu.column_name FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema AND tc.table_name = kcu.table_name WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema = '${schemaLit}' AND tc.table_name = '${tableLit}'`
-      )
+        `SELECT kcu.column_name FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema AND tc.table_name = kcu.table_name WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema = '${schemaLit}' AND tc.table_name = '${tableLit}'`,
+      ),
     ) as Array<{ column_name?: string }>;
     return new Set(rows.map((r) => (r.column_name ?? "").toLowerCase()));
   } catch {
@@ -168,7 +196,8 @@ function parseTableRef(table: string, defaultSchema?: string): TableRef {
   }
 
   const tableName = sanitizeIdentifier(table, "table");
-  const qualified = schemaDefault === "public" ? tableName : `${schemaDefault}.${tableName}`;
+  const qualified =
+    schemaDefault === "public" ? tableName : `${schemaDefault}.${tableName}`;
   return {
     schema: schemaDefault,
     table: tableName,
@@ -194,7 +223,7 @@ server.tool(
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: list_extensions ────────────────────────────────────────────────────
@@ -206,24 +235,29 @@ server.tool(
   async () => {
     try {
       const data = await runQuery(
-        "SELECT extname AS name, extversion AS installed_version FROM pg_extension ORDER BY extname"
+        "SELECT extname AS name, extversion AS installed_version FROM pg_extension ORDER BY extname",
       );
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      };
     } catch {
       return {
         content: [
           {
             type: "text",
             text: JSON.stringify(
-              { message: "Extension metadata not available via this client", extensions: [] },
+              {
+                message: "Extension metadata not available via this client",
+                extensions: [],
+              },
               null,
-              2
+              2,
             ),
           },
         ],
       };
     }
-  }
+  },
 );
 
 // ─── Tool: list_migrations ────────────────────────────────────────────────────
@@ -238,13 +272,16 @@ server.tool(
       .describe("Migrations table name (defaults to 'schema_migrations')"),
   },
   async ({ table_name }) => {
-    const tbl = sanitizeIdentifier(table_name ?? "schema_migrations", "table_name");
+    const tbl = sanitizeIdentifier(
+      table_name ?? "schema_migrations",
+      "table_name",
+    );
     const sql = `SELECT * FROM ${tbl} ORDER BY 1`;
     const data = await runQuery(sql);
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: apply_migration ────────────────────────────────────────────────────
@@ -277,11 +314,15 @@ server.tool(
       content: [
         {
           type: "text",
-          text: JSON.stringify({ migration: name ?? null, result: data }, null, 2),
+          text: JSON.stringify(
+            { migration: name ?? null, result: data },
+            null,
+            2,
+          ),
         },
       ],
     };
-  }
+  },
 );
 
 // ─── Tool: execute_sql ────────────────────────────────────────────────────────
@@ -295,7 +336,10 @@ server.tool(
       .enum(["athena", "postgresql", "supabase"])
       .optional()
       .describe("Driver to use (defaults to 'postgresql')"),
-    db_name: z.string().optional().describe("Database name (used by /query/sql endpoint)"),
+    db_name: z
+      .string()
+      .optional()
+      .describe("Database name (used by /query/sql endpoint)"),
   },
   async ({ query, driver, db_name }) => {
     if (READ_ONLY) {
@@ -326,7 +370,7 @@ server.tool(
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: get_logs ───────────────────────────────────────────────────────────
@@ -347,20 +391,25 @@ server.tool(
       .describe("Maximum number of log rows to return (defaults to 100)"),
     level: z
       .string()
-      .regex(/^[a-zA-Z0-9_-]+$/, "Level must contain only alphanumeric characters, underscores, or hyphens")
+      .regex(
+        /^[a-zA-Z0-9_-]+$/,
+        "Level must contain only alphanumeric characters, underscores, or hyphens",
+      )
       .optional()
       .describe("Filter by log level (e.g. 'error', 'warn', 'info')"),
   },
   async ({ table_name, limit, level }) => {
     const tbl = sanitizeIdentifier(table_name ?? "logs", "table_name");
     const n = limit ?? 100;
-    const levelClause = level ? ` WHERE level = '${level.replace(/'/g, "''")}'` : "";
+    const levelClause = level
+      ? ` WHERE level = '${level.replace(/'/g, "''")}'`
+      : "";
     const sql = `SELECT * FROM ${tbl}${levelClause} ORDER BY created_at DESC LIMIT ${n}`;
     const data = await runQuery(sql);
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: get_columns_of_table ────────────────────────────────────────────
@@ -369,42 +418,57 @@ server.tool(
   "get_columns_of_table",
   "Describe columns for a table using Athena's schema API",
   {
-    table: z.string().describe("Table name (optionally schema-qualified) to describe"),
-    schema: z.string().optional().describe("Optional schema name when the table name is not schema-qualified"),
+    table: z
+      .string()
+      .describe("Table name (optionally schema-qualified) to describe"),
+    schema: z
+      .string()
+      .optional()
+      .describe(
+        "Optional schema name when the table name is not schema-qualified",
+      ),
   },
   async ({ table, schema }) => {
     const ref = parseTableRef(table, schema);
     const pkColumns = await getPrimaryKeyColumns(ref.schema, ref.table);
-    const data = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`)) as {
+    const data = (await apiFetch(
+      `/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`,
+    )) as {
       columns?: Array<Record<string, unknown>>;
     };
     if (Array.isArray(data?.columns) && data.columns.length > 0) {
       const columns = data.columns.map((c) => ({
         ...c,
-        primary_key: pkColumns.has((String(c.column_name ?? "")).toLowerCase()),
+        primary_key: pkColumns.has(String(c.column_name ?? "").toLowerCase()),
       }));
-      return { content: [{ type: "text", text: JSON.stringify({ columns }, null, 2) }] };
+      return {
+        content: [{ type: "text", text: JSON.stringify({ columns }, null, 2) }],
+      };
     }
     try {
       const schemaLit = ref.schema.replace(/'/g, "''");
       const tableLit = ref.table.replace(/'/g, "''");
       const rows = queryResultToArray(
         await runQuery(
-          `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
-        )
+          `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`,
+        ),
       ) as Array<Record<string, unknown>>;
       const columns = rows.map((r) => ({
         column_name: r.column_name,
         data_type: r.data_type,
         column_default: r.column_default,
         is_nullable: r.is_nullable,
-        primary_key: pkColumns.has((String(r.column_name ?? "")).toLowerCase()),
+        primary_key: pkColumns.has(String(r.column_name ?? "").toLowerCase()),
       }));
-      return { content: [{ type: "text", text: JSON.stringify({ columns }, null, 2) }] };
+      return {
+        content: [{ type: "text", text: JSON.stringify({ columns }, null, 2) }],
+      };
     } catch {
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      };
     }
-  }
+  },
 );
 
 // ─── Tool: list_table_metadata ────────────────────────────────────────────
@@ -414,13 +478,25 @@ server.tool(
   "Return the full metadata for a table: schema name, table name, and each column's name, type, default value, and nullable flag",
   {
     table: z.string().describe("Table name (optionally schema-qualified)"),
-    schema: z.string().optional().describe("Optional schema name when the table name is not schema-qualified"),
+    schema: z
+      .string()
+      .optional()
+      .describe(
+        "Optional schema name when the table name is not schema-qualified",
+      ),
   },
   async ({ table, schema }) => {
     const ref = parseTableRef(table, schema);
     const pkColumns = await getPrimaryKeyColumns(ref.schema, ref.table);
-    const raw = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`)) as {
-      columns?: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string | null }>;
+    const raw = (await apiFetch(
+      `/schema/columns?table_name=${encodeURIComponent(ref.qualified)}`,
+    )) as {
+      columns?: Array<{
+        column_name?: string;
+        data_type?: string;
+        column_default?: string | null;
+        is_nullable?: string | null;
+      }>;
     };
     let columns = Array.isArray(raw?.columns) ? raw.columns : [];
     if (columns.length === 0) {
@@ -429,9 +505,14 @@ server.tool(
         const tableLit = ref.table.replace(/'/g, "''");
         const rows = queryResultToArray(
           await runQuery(
-            `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
-          )
-        ) as Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
+            `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`,
+          ),
+        ) as Array<{
+          column_name?: string;
+          data_type?: string;
+          column_default?: string | null;
+          is_nullable?: string;
+        }>;
         columns = rows;
       } catch {
         columns = [];
@@ -441,16 +522,20 @@ server.tool(
       schema: ref.schema,
       table: ref.table,
       qualified: ref.qualified,
-      columns: Array.isArray(columns) ? columns.map((c) => ({
-        name: c.column_name ?? "",
-        type: c.data_type ?? "unknown",
-        nullable: (c.is_nullable ?? "YES").toUpperCase() === "YES",
-        default: c.column_default ?? null,
-        primary_key: pkColumns.has((c.column_name ?? "").toLowerCase()),
-      })) : [],
+      columns: Array.isArray(columns)
+        ? columns.map((c) => ({
+            name: c.column_name ?? "",
+            type: c.data_type ?? "unknown",
+            nullable: (c.is_nullable ?? "YES").toUpperCase() === "YES",
+            default: c.column_default ?? null,
+            primary_key: pkColumns.has((c.column_name ?? "").toLowerCase()),
+          }))
+        : [],
     };
-    return { content: [{ type: "text", text: JSON.stringify(metadata, null, 2) }] };
-  }
+    return {
+      content: [{ type: "text", text: JSON.stringify(metadata, null, 2) }],
+    };
+  },
 );
 
 // ─── Tool: list_schemas ───────────────────────────────────────────────────
@@ -462,19 +547,36 @@ server.tool(
     include_system: z
       .boolean()
       .optional()
-      .describe("Include system schemas such as pg_catalog and information_schema"),
+      .describe(
+        "Include system schemas such as pg_catalog and information_schema",
+      ),
   },
   async ({ include_system }) => {
-    const data = (await apiFetch("/schema/tables")) as { tables?: Array<{ table_schema?: string }> };
+    const data = (await apiFetch("/schema/tables")) as {
+      tables?: Array<{ table_schema?: string }>;
+    };
     const tables = Array.isArray(data?.tables) ? data.tables : [];
-    const schemas = [...new Set(tables.map((t) => t.table_schema ?? "").filter(Boolean))].sort();
+    const schemas = [
+      ...new Set(tables.map((t) => t.table_schema ?? "").filter(Boolean)),
+    ].sort();
     const filtered = include_system
       ? schemas
-      : schemas.filter((s) => !s.startsWith("pg_") && s !== "information_schema");
+      : schemas.filter(
+          (s) => !s.startsWith("pg_") && s !== "information_schema",
+        );
     return {
-      content: [{ type: "text", text: JSON.stringify(filtered.map((s) => ({ schema_name: s })), null, 2) }],
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            filtered.map((s) => ({ schema_name: s })),
+            null,
+            2,
+          ),
+        },
+      ],
     };
-  }
+  },
 );
 
 // ─── Tool: list_views ─────────────────────────────────────────────────────
@@ -483,7 +585,10 @@ server.tool(
   "list_views",
   "List visible views (and optionally materialized views). Uses Athena schema API.",
   {
-    schema: z.string().optional().describe("Schema to limit the view lookup to"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Schema to limit the view lookup to"),
     include_materialized: z
       .boolean()
       .optional()
@@ -491,28 +596,38 @@ server.tool(
   },
   async ({ schema, include_materialized }) => {
     const data = (await apiFetch("/schema/tables")) as {
-      tables?: Array<{ table_schema?: string; table_name?: string; table_type?: string }>;
+      tables?: Array<{
+        table_schema?: string;
+        table_name?: string;
+        table_type?: string;
+      }>;
     };
     const tables = Array.isArray(data?.tables) ? data.tables : [];
     const wantView = (t: { table_type?: string }) =>
       t.table_type === "VIEW" || t.table_type === "view";
     const wantMatView = (t: { table_type?: string }) =>
-      t.table_type === "MATERIALIZED VIEW" || t.table_type === "materialized view";
+      t.table_type === "MATERIALIZED VIEW" ||
+      t.table_type === "materialized view";
     const filtered = tables.filter((t) => {
       if (schema && (t.table_schema ?? "") !== schema) return false;
-      if ((t.table_schema ?? "").startsWith("pg_") || (t.table_schema ?? "") === "information_schema")
+      if (
+        (t.table_schema ?? "").startsWith("pg_") ||
+        (t.table_schema ?? "") === "information_schema"
+      )
         return false;
       return wantView(t) || (include_materialized !== false && wantMatView(t));
     });
     const result = filtered
       .map((t) => ({ table_schema: t.table_schema, table_name: t.table_name }))
       .sort((a, b) =>
-        `${a.table_schema}.${a.table_name}`.localeCompare(`${b.table_schema}.${b.table_name}`)
+        `${a.table_schema}.${a.table_name}`.localeCompare(
+          `${b.table_schema}.${b.table_name}`,
+        ),
       );
     return {
       content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: list_foreign_keys ──────────────────────────────────────────────
@@ -522,7 +637,10 @@ server.tool(
   "List primary keys, foreign keys, and unique constraints for a table. Essential for understanding relationships and correct joins.",
   {
     table: z.string().describe("Table name (optionally schema-qualified)"),
-    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Optional schema when table name is not schema-qualified"),
   },
   async ({ table, schema }) => {
     const ref = parseTableRef(table, schema);
@@ -530,24 +648,29 @@ server.tool(
     const tableLit = ref.table.replace(/'/g, "''");
     try {
       const data = await runQuery(
-        `SELECT tc.constraint_type, tc.constraint_name, kcu.column_name, ccu.table_schema AS foreign_table_schema, ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema LEFT JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name AND tc.table_schema = ccu.table_schema WHERE tc.table_schema = '${schemaLit}' AND tc.table_name = '${tableLit}' AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE') ORDER BY tc.constraint_type, tc.constraint_name, kcu.ordinal_position`
+        `SELECT tc.constraint_type, tc.constraint_name, kcu.column_name, ccu.table_schema AS foreign_table_schema, ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema LEFT JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name AND tc.table_schema = ccu.table_schema WHERE tc.table_schema = '${schemaLit}' AND tc.table_name = '${tableLit}' AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE') ORDER BY tc.constraint_type, tc.constraint_name, kcu.ordinal_position`,
       );
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      };
     } catch {
       return {
         content: [
           {
             type: "text",
             text: JSON.stringify(
-              { message: "Constraint metadata not available via this client", constraints: [] },
+              {
+                message: "Constraint metadata not available via this client",
+                constraints: [],
+              },
               null,
-              2
+              2,
             ),
           },
         ],
       };
     }
-  }
+  },
 );
 
 // ─── Tool: get_table_sample ────────────────────────────────────────────────
@@ -557,7 +680,10 @@ server.tool(
   "Sample rows from a table to understand its data shape. Quick alternative to writing SQL.",
   {
     table: z.string().describe("Table name (optionally schema-qualified)"),
-    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Optional schema when table name is not schema-qualified"),
     limit: z
       .number()
       .int()
@@ -573,7 +699,7 @@ server.tool(
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: list_indexes ────────────────────────────────────────────────────
@@ -583,7 +709,10 @@ server.tool(
   "List index definitions for a table. Helps with performance and query design.",
   {
     table: z.string().describe("Table name (optionally schema-qualified)"),
-    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Optional schema when table name is not schema-qualified"),
   },
   async ({ table, schema }) => {
     const ref = parseTableRef(table, schema);
@@ -592,26 +721,34 @@ server.tool(
     try {
       const raw = queryResultToArray(
         await runQuery(
-          `SELECT indexname AS index_name, indexdef AS index_def FROM pg_indexes WHERE schemaname = '${schemaLit}' AND tablename = '${tableLit}' ORDER BY indexname`
-        )
+          `SELECT indexname AS index_name, indexdef AS index_def FROM pg_indexes WHERE schemaname = '${schemaLit}' AND tablename = '${tableLit}' ORDER BY indexname`,
+        ),
       ) as Array<Record<string, unknown>>;
-      const data = raw.map((r) => ({ index_name: r.index_name, index_def: r.index_def }));
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      const data = raw.map((r) => ({
+        index_name: r.index_name,
+        index_def: r.index_def,
+      }));
+      return {
+        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      };
     } catch {
       return {
         content: [
           {
             type: "text",
             text: JSON.stringify(
-              { message: "Index metadata not available via this client", indexes: [] },
+              {
+                message: "Index metadata not available via this client",
+                indexes: [],
+              },
               null,
-              2
+              2,
             ),
           },
         ],
       };
     }
-  }
+  },
 );
 
 // ─── Tool: search_columns ───────────────────────────────────────────────────
@@ -620,7 +757,9 @@ server.tool(
   "search_columns",
   "Find tables and columns by name pattern. Speeds up schema discovery.",
   {
-    pattern: z.string().describe("Column or table name pattern (SQL LIKE, use % for wildcard)"),
+    pattern: z
+      .string()
+      .describe("Column or table name pattern (SQL LIKE, use % for wildcard)"),
     schema: z.string().optional().describe("Optional schema to limit search"),
   },
   async ({ pattern, schema }) => {
@@ -633,24 +772,30 @@ server.tool(
       : "c.table_schema NOT IN ('pg_catalog', 'information_schema')";
     try {
       const data = await runQuery(
-        `SELECT c.table_schema, c.table_name, c.column_name, c.data_type, c.is_nullable FROM information_schema.columns c WHERE (LOWER(c.column_name) LIKE LOWER('${patternLit}') OR LOWER(c.table_name) LIKE LOWER('${patternLit}')) AND ${schemaCond} ORDER BY c.table_schema, c.table_name, c.ordinal_position`
+        `SELECT c.table_schema, c.table_name, c.column_name, c.data_type, c.is_nullable FROM information_schema.columns c WHERE (LOWER(c.column_name) LIKE LOWER('${patternLit}') OR LOWER(c.table_name) LIKE LOWER('${patternLit}')) AND ${schemaCond} ORDER BY c.table_schema, c.table_name, c.ordinal_position`,
       );
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      };
     } catch {
       return {
         content: [
           {
             type: "text",
             text: JSON.stringify(
-              { message: "Column search not available via this client; use list_tables and get_columns_of_table instead", results: [] },
+              {
+                message:
+                  "Column search not available via this client; use list_tables and get_columns_of_table instead",
+                results: [],
+              },
               null,
-              2
+              2,
             ),
           },
         ],
       };
     }
-  }
+  },
 );
 
 // ─── Tool: get_row_by_id ───────────────────────────────────────────────────
@@ -667,7 +812,10 @@ server.tool(
       .string()
       .optional()
       .describe("Primary key column name (defaults to 'id')"),
-    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Optional schema when table name is not schema-qualified"),
     limit: z
       .number()
       .int()
@@ -690,7 +838,7 @@ server.tool(
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: list_all_table_metadata ─────────────────────────────────────────
@@ -699,7 +847,10 @@ server.tool(
   "list_all_table_metadata",
   "Return metadata for all tables in one call: schema, name, columns, types, defaults, nullable. Uses Athena schema API.",
   {
-    schema: z.string().optional().describe("Optional schema to limit to (default: all user schemas)"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Optional schema to limit to (default: all user schemas)"),
   },
   async ({ schema }) => {
     const tablesData = (await apiFetch("/schema/tables")) as {
@@ -708,18 +859,47 @@ server.tool(
     const tables = Array.isArray(tablesData?.tables) ? tablesData.tables : [];
     const filtered = schema
       ? tables.filter((t) => (t.table_schema ?? "") === schema)
-      : tables.filter((t) => !(t.table_schema ?? "").startsWith("pg_") && (t.table_schema ?? "") !== "information_schema");
-    const metadata: Array<{ schema: string; table: string; columns: Array<{ name: string; type: string; nullable: boolean; default: string | null; primary_key: boolean }> }> = [];
+      : tables.filter(
+          (t) =>
+            !(t.table_schema ?? "").startsWith("pg_") &&
+            (t.table_schema ?? "") !== "information_schema",
+        );
+    const metadata: Array<{
+      schema: string;
+      table: string;
+      columns: Array<{
+        name: string;
+        type: string;
+        nullable: boolean;
+        default: string | null;
+        primary_key: boolean;
+      }>;
+    }> = [];
     for (const t of filtered) {
       const tableSchema = t.table_schema ?? "public";
       const tableNameForApi = t.table_name ?? "";
       const schemaLit = tableSchema.replace(/'/g, "''");
       const tableLit = tableNameForApi.replace(/'/g, "''");
-      const pkColumns = await getPrimaryKeyColumns(tableSchema, tableNameForApi);
-      let cols: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }> = [];
+      const pkColumns = await getPrimaryKeyColumns(
+        tableSchema,
+        tableNameForApi,
+      );
+      let cols: Array<{
+        column_name?: string;
+        data_type?: string;
+        column_default?: string | null;
+        is_nullable?: string;
+      }> = [];
       try {
-        const colData = (await apiFetch(`/schema/columns?table_name=${encodeURIComponent(tableNameForApi)}`)) as {
-          columns?: Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
+        const colData = (await apiFetch(
+          `/schema/columns?table_name=${encodeURIComponent(tableNameForApi)}`,
+        )) as {
+          columns?: Array<{
+            column_name?: string;
+            data_type?: string;
+            column_default?: string | null;
+            is_nullable?: string;
+          }>;
         };
         cols = Array.isArray(colData?.columns) ? colData.columns : [];
       } catch {
@@ -729,9 +909,14 @@ server.tool(
         try {
           const rows = queryResultToArray(
             await runQuery(
-              `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`
-            )
-          ) as Array<{ column_name?: string; data_type?: string; column_default?: string | null; is_nullable?: string }>;
+              `SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = '${schemaLit}' AND table_name = '${tableLit}' ORDER BY ordinal_position`,
+            ),
+          ) as Array<{
+            column_name?: string;
+            data_type?: string;
+            column_default?: string | null;
+            is_nullable?: string;
+          }>;
           cols = rows;
         } catch {
           cols = [];
@@ -740,20 +925,24 @@ server.tool(
       metadata.push({
         schema: t.table_schema ?? "",
         table: t.table_name ?? "",
-        columns: Array.isArray(cols) ? cols.map((c) => ({
-          name: c.column_name ?? "",
-          type: c.data_type ?? "unknown",
-          nullable: (c.is_nullable ?? "YES").toUpperCase() === "YES",
-          default: c.column_default ?? null,
-          primary_key: pkColumns.has((c.column_name ?? "").toLowerCase()),
-        })) : [],
+        columns: Array.isArray(cols)
+          ? cols.map((c) => ({
+              name: c.column_name ?? "",
+              type: c.data_type ?? "unknown",
+              nullable: (c.is_nullable ?? "YES").toUpperCase() === "YES",
+              default: c.column_default ?? null,
+              primary_key: pkColumns.has((c.column_name ?? "").toLowerCase()),
+            }))
+          : [],
       });
     }
-    metadata.sort((a, b) => `${a.schema}.${a.table}`.localeCompare(`${b.schema}.${b.table}`));
+    metadata.sort((a, b) =>
+      `${a.schema}.${a.table}`.localeCompare(`${b.schema}.${b.table}`),
+    );
     return {
       content: [{ type: "text", text: JSON.stringify(metadata, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: insert_row ──────────────────────────────────────────────────────
@@ -763,8 +952,16 @@ server.tool(
   "Insert a row into a table. Blocked when read_only mode is enabled.",
   {
     table: z.string().describe("Table name (optionally schema-qualified)"),
-    data: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).describe("Row data as key-value pairs"),
-    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+    data: z
+      .record(
+        z.string(),
+        z.union([z.string(), z.number(), z.boolean(), z.null()]),
+      )
+      .describe("Row data as key-value pairs"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Optional schema when table name is not schema-qualified"),
   },
   async ({ table, data, schema }) => {
     if (READ_ONLY) {
@@ -780,7 +977,10 @@ server.tool(
     }
     const ref = parseTableRef(table, schema);
     const insert_body = Object.fromEntries(
-      Object.entries(data).map(([k, v]) => [sanitizeIdentifier(k, "column"), v])
+      Object.entries(data).map(([k, v]) => [
+        sanitizeIdentifier(k, "column"),
+        v,
+      ]),
     );
     const payload = { table_name: ref.qualified, insert_body };
     const result = await apiFetch("/gateway/insert", {
@@ -790,7 +990,7 @@ server.tool(
     return {
       content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: delete_row ───────────────────────────────────────────────────────
@@ -801,7 +1001,10 @@ server.tool(
   {
     table: z.string().describe("Table name (optionally schema-qualified)"),
     resource_id: z.string().describe("Primary key value of the row to delete"),
-    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Optional schema when table name is not schema-qualified"),
   },
   async ({ table, resource_id, schema }) => {
     if (READ_ONLY) {
@@ -824,7 +1027,7 @@ server.tool(
     return {
       content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Tool: update_row ───────────────────────────────────────────────────────
@@ -834,12 +1037,20 @@ server.tool(
   "Update rows matching a condition. Blocked when read_only mode is enabled.",
   {
     table: z.string().describe("Table name (optionally schema-qualified)"),
-    set: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).describe("Column-value pairs to set"),
+    set: z
+      .record(
+        z.string(),
+        z.union([z.string(), z.number(), z.boolean(), z.null()]),
+      )
+      .describe("Column-value pairs to set"),
     where_column: z.string().describe("Column to match in WHERE clause"),
     where_value: z
       .union([z.string(), z.number(), z.boolean()])
       .describe("Value to match (converted to string)"),
-    schema: z.string().optional().describe("Optional schema when table name is not schema-qualified"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Optional schema when table name is not schema-qualified"),
   },
   async ({ table, set, where_column, where_value, schema }) => {
     if (READ_ONLY) {
@@ -869,9 +1080,11 @@ server.tool(
     const sql = `UPDATE ${ref.qualified} SET ${setParts.join(", ")} WHERE ${whereCol} = ${whereVal}`;
     const data = await runQuery(sql);
     return {
-      content: [{ type: "text", text: JSON.stringify({ result: data }, null, 2) }],
+      content: [
+        { type: "text", text: JSON.stringify({ result: data }, null, 2) },
+      ],
     };
-  }
+  },
 );
 
 // ─── Tool: get_row_by_eq_column_of_table ──────────────────────────────────
@@ -880,12 +1093,17 @@ server.tool(
   "get_row_by_eq_column_of_table",
   "Fetch rows from a table where `column = value` using Athena's fetch endpoint",
   {
-    table: z.string().describe("Table name to query (optionally schema-qualified)"),
+    table: z
+      .string()
+      .describe("Table name to query (optionally schema-qualified)"),
     column: z.string().describe("Column name to match against"),
     value: z
       .union([z.string(), z.number(), z.boolean()])
       .describe("Value to compare (converted to string for Athena)"),
-    schema: z.string().optional().describe("Optional schema to override the table name"),
+    schema: z
+      .string()
+      .optional()
+      .describe("Optional schema to override the table name"),
     limit: z
       .number()
       .int()
@@ -913,7 +1131,7 @@ server.tool(
     return {
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };
-  }
+  },
 );
 
 // ─── Start ────────────────────────────────────────────────────────────────────
@@ -932,7 +1150,9 @@ function startHealthServer(): void {
   });
 
   healthServer.listen(HEALTH_PORT, () => {
-    process.stderr.write(`athena-mcp health server listening on port ${HEALTH_PORT}\n`);
+    process.stderr.write(
+      `athena-mcp health server listening on port ${HEALTH_PORT}\n`,
+    );
   });
 }
 
@@ -942,7 +1162,7 @@ async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   process.stderr.write(
-    `athena-mcp started (base_url=${BASE_URL}, client=${ATHENA_CLIENT}, read_only=${READ_ONLY}, version=${VERSION})\n`
+    `athena-mcp started (base_url=${BASE_URL}, client=${ATHENA_CLIENT}, read_only=${READ_ONLY}, version=${VERSION})\n`,
   );
 }
 
