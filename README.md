@@ -111,13 +111,13 @@ VSCode supports MCP through extensions like **Continue** or through the native *
 
 #### Using GitHub Copilot (with MCP support)
 
-> **Note:** GitHub Copilot's MCP integration is evolving. Check the [official GitHub Copilot documentation](https://docs.github.com/en/copilot) for the latest configuration instructions.
+> **Note:** GitHub Copilot's MCP integration is evolving and may not yet be publicly available. The configuration structure shown below is illustrative and may differ from the actual implementation. Please check the [official GitHub Copilot documentation](https://docs.github.com/en/copilot) for the most current and accurate MCP setup instructions.
 
 If you have access to GitHub Copilot's MCP features:
 
 1. Open **VSCode Settings** → search for "MCP"
 2. Edit the MCP configuration file (typically `settings.json` or a dedicated MCP config)
-3. Add the athena server configuration:
+3. Add the athena server configuration (example structure):
 
 ```json
 {
