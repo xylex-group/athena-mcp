@@ -6,32 +6,89 @@ MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Ath
 
 ## Tool calls
 
-- [x] `search_columns`: Find tables and columns by name pattern
-- [x] `list_all_table_metadata`: Return metadata for all tables in one call: schema, name, columns, types, defaults, nullabe
+**Schema & Data**
+
 - [x] `list_tables`: List all tables available in the connected database
-- [x] `list_extensions`: List all postgreSQL installed extensions
-- [x] `execute_sql`: Execute raq SQL query, write is blocked when `read_only` mode is enabled
-- [x] `get_columns_of_table`: Describe columns for a table using Athena's schema API
-- [x] `list_table_metadata`: Returns the full metadata for a table: schema_name, table_name and each column's name, type, default value and nullable flag
 - [x] `list_schemas`: List database schemas visible to the current client
-- [x] `list_views`: List views that are visible and optionally materialized views using Athena's schema API
-- [x] `list_foreign_keys`: List primary keys, foreign keys and unique constraints for a table, essential for understanding relationships and correct joins
-- [x] `get_table_sample`: Sample rows from a table to understand it's data shape. Quick alternative to writing SQL
+- [x] `list_extensions`: List all PostgreSQL installed extensions
+- [x] `list_views`: List views that are visible and optionally materialized views
+- [x] `list_foreign_keys`: List primary keys, foreign keys and unique constraints for a table
 - [x] `list_indexes`: List index definitions for a table
+- [x] `list_all_table_metadata`: Return metadata for all tables in one call: schema, name, columns, types, defaults, nullable
+- [x] `list_table_metadata`: Returns the full metadata for a table: schema_name, table_name and each column's name, type, default value and nullable flag
+- [x] `get_columns_of_table`: Describe columns for a table using Athena's schema API
+- [x] `search_columns`: Find tables and columns by name pattern
+- [x] `get_table_sample`: Sample rows from a table to understand its data shape. Quick alternative to writing SQL
+- [x] `execute_sql`: Execute a raw SQL query, write is blocked when `read_only` mode is enabled
+- [x] `get_row_by_id`: Fetch rows by primary key column value. Simplifies the common fetch-by-id use case
+- [x] `get_row_by_eq_column_of_table`: Fetch rows from a table where `column = value` using Athena's fetch endpoint
+- [x] `insert_row`: Insert a row into a table. Blocked when `read_only` mode is enabled
+- [x] `update_row`: Update rows matching a condition. Blocked when `read_only` mode is enabled
+- [x] `delete_row`: Delete a row by primary key (resource_id). Blocked when `read_only` mode is enabled
 
-**Experimental**
+**Migrations & Logs**
 
-- [ ] `list_migrations`: List all migrations (relies on the table)
-- [ ] `apply_migration`: Apply a SQL migration against a connected DB, blocked when `read_only` mode is enabled
-- [ ] `get_logs`: Retrieve recent database logs (relies on table `logs`)
+- [x] `list_migrations`: List applied database migrations
+- [x] `apply_migration`: Apply a SQL migration against a connected DB, blocked when `read_only` mode is enabled
+- [x] `get_logs`: Retrieve recent database or application logs
 
-**Untested**
+**Health & Infrastructure**
 
-- [ ] `get_row_by_id`: Fetch rows by primary key column value. Simplifies the common fetch-by-id use case
-- [ ] `insert_row`: Insert a row into a table. Blocked when `read_only` mode is enabled
-- [ ] `update_row`: Updates rows matching a condition. Blocked when `read_only` mode is enabled
-- [ ] `delete_row`: Delete a row by primary key (resource_id). Blocked when `read_only` mode is enabled
-- [ ] `get_rows_by_eq_column_of_table`: Fetch rows from a table where `column = value` using Athena's fetch endpoint
+- [x] `ping`: Run Athena's `/ping` health check
+- [x] `get_api_root`: Fetch Athena API root metadata and advertised routes
+- [x] `get_cluster_health`: Check mirror reachability, latency, throughput, and version metadata
+- [x] `get_management_capabilities`: List management API capabilities and required rights for the current client
+
+**Table Management**
+
+- [x] `create_table`: Create a managed table via Athena's management API. Blocked when `read_only` mode is enabled
+- [x] `edit_table`: Apply safe additive ALTER TABLE operations. Blocked when `read_only` mode is enabled
+- [x] `drop_table`: Drop a managed table. Blocked when `read_only` mode is enabled
+- [x] `drop_column`: Drop a managed table column. Blocked when `read_only` mode is enabled
+- [x] `create_index`: Create an index via the management API. Blocked when `read_only` mode is enabled
+- [x] `drop_index`: Drop an index via the management API. Blocked when `read_only` mode is enabled
+
+**Pipelines**
+
+- [x] `run_pipeline`: Run a config-driven Athena pipeline (source → transform → sink)
+
+**Clients**
+
+- [x] `list_available_clients`: List Athena/Postgres clients available to the current admin key
+- [x] `list_athena_clients_admin`: List Athena clients from the database-backed admin catalog
+- [x] `create_athena_client`: Create an Athena client in the admin catalog. Blocked when `read_only` mode is enabled
+- [x] `update_athena_client`: Update an Athena client in the admin catalog. Blocked when `read_only` mode is enabled
+- [x] `delete_athena_client`: Soft-delete an Athena client from the admin catalog. Blocked when `read_only` mode is enabled
+- [x] `freeze_athena_client`: Freeze or unfreeze an Athena client. Blocked when `read_only` mode is enabled
+- [x] `list_client_statistics`: List aggregated Athena client statistics
+- [x] `refresh_client_statistics`: Rebuild Athena client statistics. Blocked when `read_only` mode is enabled
+- [x] `get_client_statistics`: Inspect per-client statistics and touched tables
+
+**API Keys**
+
+- [x] `list_api_keys`: List Athena API keys
+- [x] `create_api_key`: Create an Athena API key. Blocked when `read_only` mode is enabled
+- [x] `update_api_key`: Update an existing Athena API key. Blocked when `read_only` mode is enabled
+- [x] `delete_api_key`: Delete an Athena API key. Blocked when `read_only` mode is enabled
+- [x] `list_api_key_rights`: List available Athena API key rights
+- [x] `create_api_key_right`: Create an Athena API key right. Blocked when `read_only` mode is enabled
+- [x] `update_api_key_right`: Update an Athena API key right. Blocked when `read_only` mode is enabled
+- [x] `delete_api_key_right`: Delete an Athena API key right. Blocked when `read_only` mode is enabled
+- [x] `get_api_key_config`: Read the global Athena API key enforcement configuration
+- [x] `update_api_key_config`: Update global API key enforcement config. Blocked when `read_only` mode is enabled
+- [x] `list_api_key_clients`: List per-client API key enforcement overrides
+- [x] `save_api_key_client`: Create or update a per-client enforcement override. Blocked when `read_only` mode is enabled
+- [x] `delete_api_key_client`: Delete a per-client enforcement override. Blocked when `read_only` mode is enabled
+
+**Registry & Monitoring**
+
+- [x] `list_router_registry`: List Athena router registry entries
+- [x] `list_registry_entries`: List API registry entries from Athena
+- [x] `get_registry_entry`: Fetch a specific API registry entry by ID
+- [x] `get_metrics`: Fetch Athena's Prometheus metrics payload
+- [x] `get_embedded_openapi`: Download Athena's embedded OpenAPI YAML document
+- [x] `get_websocket_info`: Read Athena's websocket gateway contract metadata
+- [x] `toggle_supabase_ssl_enforcement`: Enable or disable Supabase SSL enforcement. Blocked when `read_only` mode is enabled
 
 ## Install
 
