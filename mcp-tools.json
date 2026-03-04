@@ -47,7 +47,9 @@
             "description": "Optional migration name or label"
           }
         },
-        "required": ["sql"]
+        "required": [
+          "sql"
+        ]
       }
     },
     {
@@ -62,7 +64,11 @@
           },
           "driver": {
             "type": "string",
-            "enum": ["athena", "postgresql", "supabase"],
+            "enum": [
+              "athena",
+              "postgresql",
+              "supabase"
+            ],
             "description": "Driver to use (defaults to 'postgresql')"
           },
           "db_name": {
@@ -70,7 +76,9 @@
             "description": "Optional database name (used by /query/sql)"
           }
         },
-        "required": ["query"]
+        "required": [
+          "query"
+        ]
       }
     },
     {
@@ -112,7 +120,9 @@
             "description": "Optional schema name when the table name is not schema-qualified"
           }
         },
-        "required": ["table"]
+        "required": [
+          "table"
+        ]
       }
     },
     {
@@ -130,7 +140,9 @@
             "description": "Optional schema name when the table name is not schema-qualified"
           }
         },
-        "required": ["table"]
+        "required": [
+          "table"
+        ]
       }
     },
     {
@@ -181,9 +193,15 @@
           },
           "value": {
             "oneOf": [
-              { "type": "string" },
-              { "type": "number" },
-              { "type": "boolean" }
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
             ],
             "description": "Value to compare (converted to string for Athena)"
           },
@@ -197,7 +215,11 @@
             "description": "Maximum number of rows to return (defaults to 100)"
           }
         },
-        "required": ["table", "column", "value"]
+        "required": [
+          "table",
+          "column",
+          "value"
+        ]
       }
     },
     {
@@ -206,10 +228,18 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
-          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+          "table": {
+            "type": "string",
+            "description": "Table name (optionally schema-qualified)"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema when table name is not schema-qualified"
+          }
         },
-        "required": ["table"]
+        "required": [
+          "table"
+        ]
       }
     },
     {
@@ -218,11 +248,23 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
-          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" },
-          "limit": { "type": "integer", "minimum": 1, "description": "Number of rows to sample (defaults to 10)" }
+          "table": {
+            "type": "string",
+            "description": "Table name (optionally schema-qualified)"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema when table name is not schema-qualified"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of rows to sample (defaults to 10)"
+          }
         },
-        "required": ["table"]
+        "required": [
+          "table"
+        ]
       }
     },
     {
@@ -231,10 +273,18 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
-          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+          "table": {
+            "type": "string",
+            "description": "Table name (optionally schema-qualified)"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema when table name is not schema-qualified"
+          }
         },
-        "required": ["table"]
+        "required": [
+          "table"
+        ]
       }
     },
     {
@@ -243,10 +293,18 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "pattern": { "type": "string", "description": "Column or table name pattern (SQL LIKE, use % for wildcard)" },
-          "schema": { "type": "string", "description": "Optional schema to limit search" }
+          "pattern": {
+            "type": "string",
+            "description": "Column or table name pattern (SQL LIKE, use % for wildcard)"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema to limit search"
+          }
         },
-        "required": ["pattern"]
+        "required": [
+          "pattern"
+        ]
       }
     },
     {
@@ -255,13 +313,39 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
-          "id": { "oneOf": [{ "type": "string" }, { "type": "number" }], "description": "Primary key value (typically id)" },
-          "id_column": { "type": "string", "description": "Primary key column name (defaults to 'id')" },
-          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" },
-          "limit": { "type": "integer", "minimum": 1, "description": "Maximum rows to return (defaults to 100)" }
+          "table": {
+            "type": "string",
+            "description": "Table name (optionally schema-qualified)"
+          },
+          "id": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "description": "Primary key value (typically id)"
+          },
+          "id_column": {
+            "type": "string",
+            "description": "Primary key column name (defaults to 'id')"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema when table name is not schema-qualified"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum rows to return (defaults to 100)"
+          }
         },
-        "required": ["table", "id"]
+        "required": [
+          "table",
+          "id"
+        ]
       }
     },
     {
@@ -270,7 +354,10 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "schema": { "type": "string", "description": "Optional schema to limit to (default: all user schemas)" }
+          "schema": {
+            "type": "string",
+            "description": "Optional schema to limit to (default: all user schemas)"
+          }
         },
         "required": []
       }
@@ -281,11 +368,39 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
-          "data": { "type": "object", "additionalProperties": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }, { "type": "null" }] }, "description": "Row data as key-value pairs" },
-          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+          "table": {
+            "type": "string",
+            "description": "Table name (optionally schema-qualified)"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "Row data as key-value pairs"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema when table name is not schema-qualified"
+          }
         },
-        "required": ["table", "data"]
+        "required": [
+          "table",
+          "data"
+        ]
       }
     },
     {
@@ -294,11 +409,23 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
-          "resource_id": { "type": "string", "description": "Primary key value of the row to delete" },
-          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+          "table": {
+            "type": "string",
+            "description": "Table name (optionally schema-qualified)"
+          },
+          "resource_id": {
+            "type": "string",
+            "description": "Primary key value of the row to delete"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema when table name is not schema-qualified"
+          }
         },
-        "required": ["table", "resource_id"]
+        "required": [
+          "table",
+          "resource_id"
+        ]
       }
     },
     {
@@ -307,14 +434,763 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "table": { "type": "string", "description": "Table name (optionally schema-qualified)" },
-          "set": { "type": "object", "additionalProperties": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }, { "type": "null" }] }, "description": "Column-value pairs to set" },
-          "where_column": { "type": "string", "description": "Column to match in WHERE clause" },
-          "where_value": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }], "description": "Value to match (converted to string)" },
-          "schema": { "type": "string", "description": "Optional schema when table name is not schema-qualified" }
+          "table": {
+            "type": "string",
+            "description": "Table name (optionally schema-qualified)"
+          },
+          "set": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "Column-value pairs to set"
+          },
+          "where_column": {
+            "type": "string",
+            "description": "Column to match in WHERE clause"
+          },
+          "where_value": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ],
+            "description": "Value to match (converted to string)"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Optional schema when table name is not schema-qualified"
+          }
         },
-        "required": ["table", "set", "where_column", "where_value"]
+        "required": [
+          "table",
+          "set",
+          "where_column",
+          "where_value"
+        ]
+      }
+    },
+    {
+      "name": "ping",
+      "description": "Run the Athena health check endpoint.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "get_api_root",
+      "description": "Fetch Athena API root metadata, including the advertised route list.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "get_cluster_health",
+      "description": "Check Athena mirror reachability, latency, throughput, and version metadata.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "get_management_capabilities",
+      "description": "List Athena management API capabilities and required rights for the current client.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "create_table",
+      "description": "Create a managed table through Athena's management API. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/CreateTableToolRequest"
+      }
+    },
+    {
+      "name": "edit_table",
+      "description": "Apply safe additive ALTER TABLE operations through Athena's management API. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/EditTableToolRequest"
+      }
+    },
+    {
+      "name": "drop_table",
+      "description": "Drop a managed table through Athena's management API. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/DropTableToolRequest"
+      }
+    },
+    {
+      "name": "drop_column",
+      "description": "Drop a managed table column through Athena's management API. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/DropColumnToolRequest"
+      }
+    },
+    {
+      "name": "create_index",
+      "description": "Create an index through Athena's management API. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/CreateIndexToolRequest"
+      }
+    },
+    {
+      "name": "drop_index",
+      "description": "Drop an index through Athena's management API. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/DropIndexToolRequest"
+      }
+    },
+    {
+      "name": "run_pipeline",
+      "description": "Run a config-driven Athena pipeline (source -> transform -> sink).",
+      "inputSchema": {
+        "$ref": "#/definitions/RunPipelineRequest"
+      }
+    },
+    {
+      "name": "list_available_clients",
+      "description": "List Athena/Postgres clients available to the current admin key.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "list_api_keys",
+      "description": "List Athena API keys using the admin API.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "create_api_key",
+      "description": "Create an Athena API key. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/CreateApiKeyToolRequest"
+      }
+    },
+    {
+      "name": "update_api_key",
+      "description": "Update an existing Athena API key. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/UpdateApiKeyToolRequest"
+      }
+    },
+    {
+      "name": "delete_api_key",
+      "description": "Delete an Athena API key. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/DeleteApiKeyToolRequest"
+      }
+    },
+    {
+      "name": "list_api_key_rights",
+      "description": "List available Athena API key rights.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "create_api_key_right",
+      "description": "Create an Athena API key right. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/ApiKeyRightToolRequest"
+      }
+    },
+    {
+      "name": "update_api_key_right",
+      "description": "Update an Athena API key right. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/UpdateApiKeyRightToolRequest"
+      }
+    },
+    {
+      "name": "delete_api_key_right",
+      "description": "Delete an Athena API key right. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/DeleteApiKeyToolRequest"
+      }
+    },
+    {
+      "name": "get_api_key_config",
+      "description": "Read the global Athena API key enforcement configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "update_api_key_config",
+      "description": "Update global Athena API key enforcement. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/UpdateApiKeyConfigToolRequest"
+      }
+    },
+    {
+      "name": "list_api_key_clients",
+      "description": "List per-client Athena API key enforcement overrides.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "save_api_key_client",
+      "description": "Create or update a per-client Athena API key enforcement override. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/SaveApiKeyClientToolRequest"
+      }
+    },
+    {
+      "name": "delete_api_key_client",
+      "description": "Delete a per-client Athena API key enforcement override. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/DeleteApiKeyClientToolRequest"
+      }
+    },
+    {
+      "name": "list_athena_clients_admin",
+      "description": "List Athena clients from the database-backed admin catalog.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "create_athena_client",
+      "description": "Create an Athena client in the admin catalog. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/SaveAthenaClientToolRequest"
+      }
+    },
+    {
+      "name": "update_athena_client",
+      "description": "Update an Athena client in the admin catalog. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/SaveAthenaClientToolRequest"
+      }
+    },
+    {
+      "name": "delete_athena_client",
+      "description": "Soft-delete an Athena client from the admin catalog. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/DeleteApiKeyClientToolRequest"
+      }
+    },
+    {
+      "name": "freeze_athena_client",
+      "description": "Freeze or unfreeze an Athena client. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/FreezeAthenaClientToolRequest"
+      }
+    },
+    {
+      "name": "list_client_statistics",
+      "description": "List aggregated Athena client statistics from gateway logs.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "refresh_client_statistics",
+      "description": "Rebuild Athena client statistics from gateway logs. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "get_client_statistics",
+      "description": "Inspect per-client Athena statistics and touched tables.",
+      "inputSchema": {
+        "$ref": "#/definitions/DeleteApiKeyClientToolRequest"
+      }
+    },
+    {
+      "name": "list_router_registry",
+      "description": "List Athena router registry entries.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "list_registry_entries",
+      "description": "List API registry entries from Athena.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "get_registry_entry",
+      "description": "Fetch a specific API registry entry by ID.",
+      "inputSchema": {
+        "$ref": "#/definitions/GetRegistryEntryToolRequest"
+      }
+    },
+    {
+      "name": "get_metrics",
+      "description": "Fetch Athena's Prometheus metrics payload.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "get_embedded_openapi",
+      "description": "Download Athena's embedded OpenAPI YAML document.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "get_websocket_info",
+      "description": "Read Athena's websocket gateway contract metadata.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "toggle_supabase_ssl_enforcement",
+      "description": "Enable or disable Supabase SSL enforcement for a project. Blocked when read_only mode is enabled.",
+      "inputSchema": {
+        "$ref": "#/definitions/ToggleSupabaseSslEnforcementToolRequest"
       }
     }
-  ]
+  ],
+  "definitions": {
+    "EmptyRequest": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "CreateTableToolRequest": {
+      "type": "object",
+      "properties": {
+        "table_name": {
+          "type": "string",
+          "description": "Table name to create"
+        },
+        "schema_name": {
+          "type": "string",
+          "description": "Schema name (defaults to public)"
+        },
+        "columns": {
+          "type": "array",
+          "description": "Optional column definitions",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Column name"
+              },
+              "data_type": {
+                "type": "string",
+                "description": "PostgreSQL data type"
+              },
+              "nullable": {
+                "type": "boolean",
+                "description": "Whether the column is nullable"
+              },
+              "default_expression": {
+                "type": "string",
+                "description": "Optional SQL default expression"
+              }
+            },
+            "required": [
+              "name",
+              "data_type"
+            ]
+          }
+        },
+        "if_not_exists": {
+          "type": "boolean",
+          "description": "Compatibility flag accepted by Athena"
+        }
+      },
+      "required": [
+        "table_name"
+      ]
+    },
+    "EditTableToolRequest": {
+      "type": "object",
+      "properties": {
+        "table_name": {
+          "type": "string",
+          "description": "Target table name"
+        },
+        "schema_name": {
+          "type": "string",
+          "description": "Schema name (defaults to public)"
+        },
+        "operations": {
+          "type": "array",
+          "description": "Ordered table alteration operations",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "table_name",
+        "operations"
+      ]
+    },
+    "DropTableToolRequest": {
+      "type": "object",
+      "properties": {
+        "table_name": {
+          "type": "string",
+          "description": "Target table name"
+        },
+        "schema_name": {
+          "type": "string",
+          "description": "Schema name (defaults to public)"
+        },
+        "cascade": {
+          "type": "boolean",
+          "description": "Whether to cascade the drop"
+        }
+      },
+      "required": [
+        "table_name"
+      ]
+    },
+    "DropColumnToolRequest": {
+      "type": "object",
+      "properties": {
+        "table_name": {
+          "type": "string",
+          "description": "Target table name"
+        },
+        "column_name": {
+          "type": "string",
+          "description": "Column name to drop"
+        },
+        "schema_name": {
+          "type": "string",
+          "description": "Schema name (defaults to public)"
+        },
+        "cascade": {
+          "type": "boolean",
+          "description": "Whether to cascade the drop"
+        }
+      },
+      "required": [
+        "table_name",
+        "column_name"
+      ]
+    },
+    "CreateIndexToolRequest": {
+      "type": "object",
+      "properties": {
+        "table_name": {
+          "type": "string",
+          "description": "Target table name"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Columns included in the index"
+        },
+        "schema_name": {
+          "type": "string",
+          "description": "Schema name (defaults to public)"
+        },
+        "index_name": {
+          "type": "string",
+          "description": "Optional explicit index name"
+        },
+        "unique": {
+          "type": "boolean",
+          "description": "Whether the index is unique"
+        },
+        "method": {
+          "type": "string",
+          "description": "Index access method (defaults to btree)"
+        }
+      },
+      "required": [
+        "table_name",
+        "columns"
+      ]
+    },
+    "DropIndexToolRequest": {
+      "type": "object",
+      "properties": {
+        "index_name": {
+          "type": "string",
+          "description": "Index name to drop"
+        },
+        "schema_name": {
+          "type": "string",
+          "description": "Schema name (defaults to public)"
+        }
+      },
+      "required": [
+        "index_name"
+      ]
+    },
+    "RunPipelineRequest": {
+      "type": "object",
+      "properties": {
+        "pipeline": {
+          "type": "string",
+          "description": "Optional prebuilt pipeline name from Athena config"
+        },
+        "source": {
+          "type": "object",
+          "description": "Pipeline source config"
+        },
+        "transform": {
+          "type": "object",
+          "description": "Pipeline transform config"
+        },
+        "sink": {
+          "type": "object",
+          "description": "Pipeline sink config"
+        }
+      },
+      "required": []
+    },
+    "CreateApiKeyToolRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-readable API key name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional description"
+        },
+        "client_name": {
+          "type": "string",
+          "description": "Optional client binding for this key"
+        },
+        "expires_at": {
+          "type": "string",
+          "description": "Optional ISO date-time expiry"
+        },
+        "rights": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Rights to grant"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "UpdateApiKeyToolRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "API key UUID"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "client_name": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "string"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "rights": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "DeleteApiKeyToolRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "API key UUID"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "ApiKeyRightToolRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Right name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional description"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "UpdateApiKeyRightToolRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "API key right UUID"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "UpdateApiKeyConfigToolRequest": {
+      "type": "object",
+      "properties": {
+        "enforce_api_keys": {
+          "type": "boolean",
+          "description": "Whether API keys are globally enforced"
+        }
+      },
+      "required": [
+        "enforce_api_keys"
+      ]
+    },
+    "SaveApiKeyClientToolRequest": {
+      "type": "object",
+      "properties": {
+        "client_name": {
+          "type": "string",
+          "description": "Athena client name"
+        },
+        "enforce_api_keys": {
+          "type": "boolean",
+          "description": "Whether API keys are enforced for this client"
+        }
+      },
+      "required": [
+        "client_name",
+        "enforce_api_keys"
+      ]
+    },
+    "DeleteApiKeyClientToolRequest": {
+      "type": "object",
+      "properties": {
+        "client_name": {
+          "type": "string",
+          "description": "Athena client name"
+        }
+      },
+      "required": [
+        "client_name"
+      ]
+    },
+    "SaveAthenaClientToolRequest": {
+      "type": "object",
+      "properties": {
+        "client_name": {
+          "type": "string",
+          "description": "Athena client name"
+        },
+        "description": {
+          "type": "string"
+        },
+        "pg_uri": {
+          "type": "string"
+        },
+        "pg_uri_env_var": {
+          "type": "string"
+        },
+        "is_active": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "client_name"
+      ]
+    },
+    "FreezeAthenaClientToolRequest": {
+      "type": "object",
+      "properties": {
+        "client_name": {
+          "type": "string",
+          "description": "Athena client name"
+        },
+        "is_frozen": {
+          "type": "boolean",
+          "description": "Whether the client should be frozen"
+        }
+      },
+      "required": [
+        "client_name",
+        "is_frozen"
+      ]
+    },
+    "GetRegistryEntryToolRequest": {
+      "type": "object",
+      "properties": {
+        "api_registry_id": {
+          "type": "string",
+          "description": "Registry row identifier"
+        }
+      },
+      "required": [
+        "api_registry_id"
+      ]
+    },
+    "ToggleSupabaseSslEnforcementToolRequest": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether Supabase SSL enforcement should be enabled"
+        },
+        "access_token": {
+          "type": "string",
+          "description": "Optional override for SUPABASE_ACCESS_TOKEN"
+        },
+        "project_ref": {
+          "type": "string",
+          "description": "Optional override for PROJECT_REF"
+        }
+      },
+      "required": [
+        "enabled"
+      ]
+    }
+  }
 }

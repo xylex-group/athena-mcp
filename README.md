@@ -268,6 +268,46 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 | `insert_row`                    | Insert a row (blocked in read-only mode)                             |
 | `delete_row`                    | Delete a row by primary key (blocked in read-only mode)              |
 | `update_row`                    | Update rows matching a condition (blocked in read-only mode)         |
+| `ping`                          | Run Athena's `/ping` health check                                    |
+| `get_api_root`                  | Fetch Athena root metadata and advertised routes                     |
+| `get_cluster_health`            | Read mirror health, latency, and version metadata                    |
+| `get_management_capabilities`   | Read management capability/right metadata                            |
+| `create_table`                  | Create a managed table (blocked in read-only mode)                   |
+| `edit_table`                    | Apply additive table alterations (blocked in read-only mode)         |
+| `drop_table`                    | Drop a managed table (blocked in read-only mode)                     |
+| `drop_column`                   | Drop a managed column (blocked in read-only mode)                    |
+| `create_index`                  | Create an index via management API (blocked in read-only mode)       |
+| `drop_index`                    | Drop an index via management API (blocked in read-only mode)         |
+| `run_pipeline`                  | Execute a config-driven Athena pipeline                              |
+| `list_available_clients`        | List Athena/Postgres clients exposed by the admin API                |
+| `list_api_keys`                 | List Athena API keys                                                 |
+| `create_api_key`                | Create an Athena API key (blocked in read-only mode)                 |
+| `update_api_key`                | Update an Athena API key (blocked in read-only mode)                 |
+| `delete_api_key`                | Delete an Athena API key (blocked in read-only mode)                 |
+| `list_api_key_rights`           | List available API key rights                                        |
+| `create_api_key_right`          | Create an API key right (blocked in read-only mode)                  |
+| `update_api_key_right`          | Update an API key right (blocked in read-only mode)                  |
+| `delete_api_key_right`          | Delete an API key right (blocked in read-only mode)                  |
+| `get_api_key_config`            | Read global API key enforcement config                               |
+| `update_api_key_config`         | Update API key enforcement config (blocked in read-only mode)        |
+| `list_api_key_clients`          | List per-client API key enforcement overrides                        |
+| `save_api_key_client`           | Upsert a client enforcement override (blocked in read-only mode)     |
+| `delete_api_key_client`         | Delete a client enforcement override (blocked in read-only mode)     |
+| `list_athena_clients_admin`     | List Athena clients from the admin catalog                           |
+| `create_athena_client`          | Create an Athena client (blocked in read-only mode)                  |
+| `update_athena_client`          | Update an Athena client (blocked in read-only mode)                  |
+| `delete_athena_client`          | Soft-delete an Athena client (blocked in read-only mode)             |
+| `freeze_athena_client`          | Freeze/unfreeze an Athena client (blocked in read-only mode)         |
+| `list_client_statistics`        | List aggregated client statistics                                    |
+| `refresh_client_statistics`     | Rebuild client statistics (blocked in read-only mode)                |
+| `get_client_statistics`         | Read per-client statistics and touched tables                        |
+| `toggle_supabase_ssl_enforcement` | Toggle Supabase SSL enforcement (blocked in read-only mode)          |
+| `list_router_registry`          | List router registry entries                                         |
+| `list_registry_entries`         | List API registry entries                                            |
+| `get_registry_entry`            | Fetch an API registry entry by ID                                    |
+| `get_metrics`                   | Fetch Prometheus metrics                                             |
+| `get_embedded_openapi`          | Download Athena's embedded OpenAPI YAML                              |
+| `get_websocket_info`            | Read websocket gateway contract metadata                             |
 
 Tool schemas are documented in [`mcp-tools.json`](mcp-tools.json) (MCP-native) and [`athena-mcp-openapi.yaml`](athena-mcp-openapi.yaml) (OpenAPI 3.0).
 
@@ -299,7 +339,7 @@ npx -y @xylex-group/athena-mcp --athena-base-url=https://api.example.com --athen
 
 When `READ_ONLY=true`:
 
-- `apply_migration`, `insert_row`, `delete_row`, and `update_row` return an error immediately.
+- `apply_migration`, `insert_row`, `delete_row`, `update_row`, `create_table`, `edit_table`, `drop_table`, `drop_column`, `create_index`, `drop_index`, `create_api_key`, `update_api_key`, `delete_api_key`, `create_api_key_right`, `update_api_key_right`, `delete_api_key_right`, `update_api_key_config`, `save_api_key_client`, `delete_api_key_client`, `create_athena_client`, `update_athena_client`, `delete_athena_client`, `freeze_athena_client`, `refresh_client_statistics`, and `toggle_supabase_ssl_enforcement` return an error immediately.
 - `execute_sql` rejects queries containing write keywords (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ALTER`, `TRUNCATE`, `GRANT`, `REVOKE`, `REPLACE`).
 
 ## Usage (generic MCP config)

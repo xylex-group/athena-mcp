@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Athena RS
-  version: 0.80.2
+  version: 1.2.0
   description: Athena gateway API and driver
 servers:
 - url: https://athena-db.com
@@ -50,6 +50,235 @@ paths:
                           example: [ "POST" ]
                         summary:
                           type: string
+  /ping:
+    get:
+      summary: Health check
+      description: Returns `pong` so orchestrators and load balancers can verify the process is alive.
+      responses:
+        "200":
+          description: Pong response
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: pong
+  /health/cluster:
+    get:
+      summary: Cluster mirror health and version checks
+      description: Checks Athena mirror domains, returns reachability, latency, throughput, and reported version metadata.
+      responses:
+        "200":
+          description: Cluster health details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterHealthResponse'
+  /management/capabilities:
+    get:
+      summary: List management API capabilities for a client
+      description: Requires `X-Athena-Client` and a client-bound API key with `management.read`.
+      parameters:
+      - in: header
+        name: X-Athena-Client
+        required: true
+        schema: { type: string }
+      - in: header
+        name: apikey
+        required: true
+        schema: { type: string }
+      - in: header
+        name: x-api-key
+        schema: { type: string }
+        description: optional API key mirror of the `apikey` header
+      responses:
+        "200":
+          description: Management capability details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManagementCapabilitiesEnvelope'
+        "400": { description: Missing or unknown X-Athena-Client }
+        "401": { description: Missing or invalid API key }
+        "403": { description: API key is not client-bound or lacks management.read }
+  /management/tables:
+    post:
+      summary: Create a managed table
+      description: Requires `X-Athena-Client` and a client-bound API key with `management.tables.write`.
+      parameters:
+      - in: header
+        name: X-Athena-Client
+        required: true
+        schema: { type: string }
+      - in: header
+        name: apikey
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTableRequest'
+      responses:
+        "201":
+          description: Table created
+          content:
+            application/json:
+              schema:
+                type: object
+        "400": { description: Invalid payload }
+        "401": { description: Missing or invalid API key }
+        "403": { description: Missing management.tables.write or key is not client-bound }
+        "409": { description: Table already exists }
+        "503": { description: database_audit_log is not available in the target database }
+  /management/tables/{table_name}:
+    patch:
+      summary: Apply safe additive ALTER TABLE operations
+      description: Requires `X-Athena-Client` and a client-bound API key with `management.tables.write`.
+      parameters:
+      - in: path
+        name: table_name
+        required: true
+        schema: { type: string }
+      - in: header
+        name: X-Athena-Client
+        required: true
+        schema: { type: string }
+      - in: header
+        name: apikey
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTableRequest'
+      responses:
+        "200": { description: Table updated }
+        "400": { description: Invalid payload or unsupported alteration }
+        "401": { description: Missing or invalid API key }
+        "403": { description: Missing management.tables.write or key is not client-bound }
+        "404": { description: Table not found }
+        "503": { description: database_audit_log is not available in the target database }
+    delete:
+      summary: Drop a managed table
+      description: Requires `X-Athena-Client` and a client-bound API key with `management.tables.drop`.
+      parameters:
+      - in: path
+        name: table_name
+        required: true
+        schema: { type: string }
+      - in: header
+        name: X-Athena-Client
+        required: true
+        schema: { type: string }
+      - in: header
+        name: apikey
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DropTableRequest'
+      responses:
+        "200": { description: Table dropped }
+        "401": { description: Missing or invalid API key }
+        "403": { description: Missing management.tables.drop or key is not client-bound }
+        "404": { description: Table not found }
+        "503": { description: database_audit_log is not available in the target database }
+  /management/tables/{table_name}/columns/{column_name}:
+    delete:
+      summary: Drop a managed table column
+      description: Requires `X-Athena-Client` and a client-bound API key with `management.columns.drop`.
+      parameters:
+      - in: path
+        name: table_name
+        required: true
+        schema: { type: string }
+      - in: path
+        name: column_name
+        required: true
+        schema: { type: string }
+      - in: header
+        name: X-Athena-Client
+        required: true
+        schema: { type: string }
+      - in: header
+        name: apikey
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DropColumnRequest'
+      responses:
+        "200": { description: Column dropped }
+        "400": { description: Invalid payload or reserved column }
+        "401": { description: Missing or invalid API key }
+        "403": { description: Missing management.columns.drop or key is not client-bound }
+        "404": { description: Column not found }
+        "503": { description: database_audit_log is not available in the target database }
+  /management/indexes:
+    post:
+      summary: Create an index
+      description: Requires `X-Athena-Client` and a client-bound API key with `management.indexes.write`.
+      parameters:
+      - in: header
+        name: X-Athena-Client
+        required: true
+        schema: { type: string }
+      - in: header
+        name: apikey
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIndexRequest'
+      responses:
+        "201": { description: Index created }
+        "400": { description: Invalid payload }
+        "401": { description: Missing or invalid API key }
+        "403": { description: Missing management.indexes.write or key is not client-bound }
+        "404": { description: Table not found }
+        "409": { description: Index already exists }
+        "503": { description: database_audit_log is not available in the target database }
+  /management/indexes/{index_name}:
+    delete:
+      summary: Drop an index
+      description: Requires `X-Athena-Client` and a client-bound API key with `management.indexes.drop`.
+      parameters:
+      - in: path
+        name: index_name
+        required: true
+        schema: { type: string }
+      - in: header
+        name: X-Athena-Client
+        required: true
+        schema: { type: string }
+      - in: header
+        name: apikey
+        required: true
+        schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DropIndexRequest'
+      responses:
+        "200": { description: Index dropped }
+        "401": { description: Missing or invalid API key }
+        "403": { description: Missing management.indexes.drop or key is not client-bound }
+        "404": { description: Index not found }
+        "503": { description: database_audit_log is not available in the target database }
   /query/sql:
     post:
       summary: Execute SQL using selected driver
@@ -445,7 +674,7 @@ paths:
 
   /pipelines:
     post:
-      summary: Run a config-driven pipeline (source â†’ transform â†’ sink)
+      summary: Run a config-driven pipeline (source → transform → sink)
       description: Executes a pipeline with optional prebuilt reference and overrides. Uses X-Athena-Client for routing (same as gateway).
       parameters:
       - in: header
@@ -502,6 +731,394 @@ paths:
                   errors: { type: array }
         "400": { description: Bad request (e.g. missing X-Athena-Client or unknown pipeline) }
         "500": { description: Internal error }
+
+  /admin/api-keys:
+    get:
+      summary: List all API keys
+      description: Requires the static admin key stored in `ATHENA_KEY_12`.
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      responses:
+        "200":
+          description: Paginated API key records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_keys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKeyRecord'
+    post:
+      summary: Create a new API key
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+      responses:
+        "201":
+          description: API key created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApiKeyResponse'
+        "409": { description: Duplicate public_id }
+
+  /admin/api-keys/{id}:
+    patch:
+      summary: Update an existing API key
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - $ref: '#/components/parameters/ApiKeyIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApiKeyRequest'
+      responses:
+        "200":
+          description: API key updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  record:
+                    $ref: '#/components/schemas/ApiKeyRecord'
+        "404": { description: API key not found }
+    delete:
+      summary: Delete an API key
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - $ref: '#/components/parameters/ApiKeyIdParam'
+      responses:
+        "200":
+          description: API key removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+        "404": { description: API key not found }
+
+  /admin/api-key-rights:
+    get:
+      summary: List API key rights
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      responses:
+        "200":
+          description: Available rights
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rights:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKeyRightRecord'
+    post:
+      summary: Create a new API key right
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyRightRequest'
+      responses:
+        "201":
+          description: API key right created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  right:
+                    $ref: '#/components/schemas/ApiKeyRightRecord'
+
+  /admin/api-key-rights/{id}:
+    patch:
+      summary: Update an API key right
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - $ref: '#/components/parameters/ApiKeyIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyRightRequest'
+      responses:
+        "200":
+          description: API key right updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  right:
+                    $ref: '#/components/schemas/ApiKeyRightRecord'
+        "404": { description: Right not found }
+    delete:
+      summary: Delete an API key right
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - $ref: '#/components/parameters/ApiKeyIdParam'
+      responses:
+        "200":
+          description: API key right removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+        "404": { description: Right not found }
+
+  /admin/api-key-config:
+    get:
+      summary: Get global API key enforcement configuration
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      responses:
+        "200":
+          description: Global+per-client config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyConfigResponse'
+    put:
+      summary: Toggle global API key enforcement
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyConfigRequest'
+      responses:
+        "200":
+          description: Updated global config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyConfigResponse'
+
+  /admin/api-key-clients:
+    get:
+      summary: List per-client API key enforcement overrides
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      responses:
+        "200":
+          description: Client configs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyClientListResponse'
+
+  /admin/api-key-clients/{client_name}:
+    put:
+      summary: Update or insert a client's enforcement override
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - name: client_name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyClientConfigRequest'
+      responses:
+        "200":
+          description: Client config upserted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  client:
+                    $ref: '#/components/schemas/ApiKeyClientConfig'
+    delete:
+      summary: Remove a client's enforcement override
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - name: client_name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Client override deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  client_name:
+                    type: string
+        "404": { description: Client config not found }
+
+  /admin/clients:
+    get:
+      summary: List Athena clients from the database-backed catalog
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      responses:
+        "200":
+          description: Athena clients and their runtime state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminClientsResponse'
+    post:
+      summary: Create a database-backed Athena client
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveAthenaClientRequest'
+      responses:
+        "201":
+          description: Athena client created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminClientResponse'
+
+  /admin/clients/{client_name}:
+    patch:
+      summary: Update an Athena client
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - name: client_name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveAthenaClientRequest'
+      responses:
+        "200":
+          description: Athena client updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminClientResponse'
+    delete:
+      summary: Soft-delete an Athena client
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - name: client_name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Athena client deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminClientResponse'
+        "404": { description: Athena client not found }
+
+  /admin/clients/{client_name}/freeze:
+    put:
+      summary: Freeze or unfreeze an Athena client
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - name: client_name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreezeAthenaClientRequest'
+      responses:
+        "200":
+          description: Athena client freeze state updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminClientResponse'
+        "404": { description: Athena client not found }
+
+  /admin/clients/statistics:
+    get:
+      summary: List Athena client statistics
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      responses:
+        "200":
+          description: Aggregated request and operation statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientStatisticsListResponse'
+
+  /admin/clients/statistics/refresh:
+    post:
+      summary: Rebuild Athena client statistics from gateway logs
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      responses:
+        "200":
+          description: Statistics refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientStatisticsListResponse'
+
+  /admin/clients/{client_name}/statistics:
+    get:
+      summary: Inspect Athena client statistics and touched tables
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      - name: client_name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Per-client statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientStatisticsDetailResponse'
+        "404": { description: Client statistics not found }
 
   /api/v2/supabase/ssl_enforcement:
     post:
@@ -563,6 +1180,21 @@ paths:
                   type: object
         "500": { description: Failed to load router registry entries }
 
+  /metrics:
+    get:
+      summary: Prometheus metrics endpoint
+      description: Exposes Prometheus text metrics including uptime, request counters, management mutation counters, cluster probe gauges, and 24-hour aggregates.
+      responses:
+        "200":
+          description: Metrics payload
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # TYPE athena_uptime_seconds gauge
+                  athena_uptime_seconds 123.0
+
   /registry:
     get:
       summary: List API registry entries
@@ -609,18 +1241,30 @@ paths:
   /schema/clients:
     get:
       summary: List configured Postgres clients
+      description: Protected by the static admin key (`ATHENA_KEY_12`).
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
       responses:
         "200":
           description: A JSON object containing a clients array
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  clients:
-                    type: array
-                    items:
-                      type: string
+                $ref: '#/components/schemas/ClientsResponse'
+
+  /clients:
+    get:
+      summary: List Athena/Postgres clients (admin)
+      description: Same response as `/schema/clients`, but exposed without the `schema` prefix.
+      parameters:
+      - $ref: '#/components/parameters/AdminApiKeyHeader'
+      responses:
+        "200":
+          description: Configured clients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientsResponse'
 
   /schema/tables:
     get:
@@ -682,6 +1326,36 @@ paths:
         "400": { description: Missing header or invalid table_name }
         "500": { description: Failed to fetch column metadata }
 
+  /schema/migrations:
+    get:
+      summary: List schema migrations (Supabase-style)
+      description: Returns migration records from supabase_migrations.schema_migrations. If the table does not exist, returns an empty array with a message instead of an error.
+      parameters:
+      - in: header
+        name: X-Athena-Client
+        required: true
+        schema: { type: string }
+      responses:
+        "200":
+          description: Migrations list or empty with message when table absent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  migrations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        version: { type: string, nullable: true }
+                        name: { type: string, nullable: true }
+                  message:
+                    type: string
+                    description: Present when migrations table does not exist
+        "400": { description: Missing X-Athena-Client }
+        "500": { description: Other database error }
+
   /openapi.yaml:
     get:
       summary: Download the embedded OpenAPI YAML
@@ -694,6 +1368,51 @@ paths:
                 type: string
         "500": { description: Failed to read openapi.yaml }
 
+  /wss/info:
+    get:
+      summary: Read the WebSocket gateway contract
+      description: Returns rollout metadata and the current WebSocket gateway message contract.
+      responses:
+        "200":
+          description: WebSocket gateway contract metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Athena WebSocket gateway scaffold
+                  data:
+                    type: object
+                    properties:
+                      transport:
+                        type: string
+                        example: wss
+                      path:
+                        type: string
+                        example: /wss/gateway
+                      state:
+                        type: string
+                        example: scaffolded
+                      notes:
+                        type: array
+                        items:
+                          type: string
+                      actions:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                        - gateway.fetch
+                        - gateway.insert
+                        - gateway.update
+                        - gateway.delete
+                        - gateway.query
+
   /docs:
     get:
       summary: Redirect to the hosted Athena docs
@@ -703,3 +1422,556 @@ paths:
           headers:
             Location:
               schema: { type: string, format: uri }
+
+components:
+  parameters:
+    AdminApiKeyHeader:
+      name: apikey
+      in: header
+      description: |
+        The static admin key configured as `ATHENA_KEY_12`. Authorization headers (`Bearer <key>`), `X-API-Key`, `X-Athena-Key`, or `?api_key=` are also accepted.
+      required: true
+      schema:
+        type: string
+    ApiKeyIdParam:
+      name: id
+      in: path
+      required: true
+      description: UUID that identifies an API key or API key right (`api_keys_id`, `api_key_rights_id`).
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    ApiKeyRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        public_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        client_name:
+          type: string
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_active:
+          type: boolean
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        rights:
+          type: array
+          items:
+            type: string
+    CreateApiKeyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        client_name:
+          type: string
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        rights:
+          type: array
+          items:
+            type: string
+      required: [ name ]
+    UpdateApiKeyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        client_name:
+          type: string
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_active:
+          type: boolean
+        rights:
+          type: array
+          items:
+            type: string
+    CreateApiKeyResponse:
+      type: object
+      properties:
+        api_key:
+          type: string
+          example: ath_abcdefghijklmnop.secret
+        record:
+          $ref: '#/components/schemas/ApiKeyRecord'
+    ApiKeyRightRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+      required: [ name ]
+    ApiKeyRightRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ApiKeyConfigRequest:
+      type: object
+      properties:
+        enforce_api_keys:
+          type: boolean
+      required: [ enforce_api_keys ]
+    ApiKeyGlobalConfig:
+      type: object
+      properties:
+        enforce_api_keys:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+    ApiKeyClientConfig:
+      type: object
+      properties:
+        client_name:
+          type: string
+        enforce_api_keys:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ApiKeyConfigResponse:
+      type: object
+      properties:
+        global:
+          $ref: '#/components/schemas/ApiKeyGlobalConfig'
+        clients:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKeyClientConfig'
+    ApiKeyClientConfigRequest:
+      type: object
+      properties:
+        enforce_api_keys:
+          type: boolean
+      required: [ enforce_api_keys ]
+    ApiKeyClientListResponse:
+      type: object
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKeyClientConfig'
+    ClientsResponse:
+      type: object
+      properties:
+        clients:
+          type: array
+          items:
+            type: string
+    AthenaClientRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        client_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        pg_uri:
+          type: string
+          nullable: true
+        pg_uri_env_var:
+          type: string
+          nullable: true
+        config_uri_template:
+          type: string
+          nullable: true
+        source:
+          type: string
+        is_active:
+          type: boolean
+        is_frozen:
+          type: boolean
+        last_synced_from_config_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+    RuntimeAthenaClient:
+      type: object
+      properties:
+        client_name:
+          type: string
+        source:
+          type: string
+        description:
+          type: string
+          nullable: true
+        pg_uri:
+          type: string
+          nullable: true
+        pg_uri_env_var:
+          type: string
+          nullable: true
+        config_uri_template:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        is_frozen:
+          type: boolean
+        pool_connected:
+          type: boolean
+    SaveAthenaClientRequest:
+      type: object
+      properties:
+        client_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        pg_uri:
+          type: string
+          nullable: true
+        pg_uri_env_var:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+    FreezeAthenaClientRequest:
+      type: object
+      properties:
+        is_frozen:
+          type: boolean
+      required: [ is_frozen ]
+    AdminClientResponse:
+      type: object
+      properties:
+        client:
+          $ref: '#/components/schemas/AthenaClientRecord'
+    AdminClientsResponse:
+      type: object
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthenaClientRecord'
+        runtime:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuntimeAthenaClient'
+    ClientStatisticsRecord:
+      type: object
+      properties:
+        client_name:
+          type: string
+        total_requests:
+          type: integer
+        successful_requests:
+          type: integer
+        failed_requests:
+          type: integer
+        total_cached_requests:
+          type: integer
+        total_operations:
+          type: integer
+        last_request_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_operation_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+    ClientTableStatisticsRecord:
+      type: object
+      properties:
+        client_name:
+          type: string
+        table_name:
+          type: string
+        operation:
+          type: string
+        total_operations:
+          type: integer
+        error_operations:
+          type: integer
+        last_operation_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+    ClientStatisticsListResponse:
+      type: object
+      properties:
+        statistics:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientStatisticsRecord'
+    ClientStatisticsDetailResponse:
+      type: object
+      properties:
+        statistics:
+          $ref: '#/components/schemas/ClientStatisticsRecord'
+        tables:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientTableStatisticsRecord'
+    ManagementColumnRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        data_type:
+          type: string
+        nullable:
+          type: boolean
+          default: true
+        default_expression:
+          type: string
+          nullable: true
+      required: [ name, data_type ]
+    CreateTableRequest:
+      type: object
+      properties:
+        schema_name:
+          type: string
+          default: public
+        table_name:
+          type: string
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/ManagementColumnRequest'
+        if_not_exists:
+          type: boolean
+          description: Accepted for compatibility but ignored; Athena still returns 409 when the table exists.
+      required: [ table_name ]
+    EditTableRequest:
+      type: object
+      properties:
+        schema_name:
+          type: string
+          default: public
+        operations:
+          type: array
+          items:
+            oneOf:
+            - type: object
+              properties:
+                type: { type: string, enum: [ add_column ] }
+                column:
+                  $ref: '#/components/schemas/ManagementColumnRequest'
+              required: [ type, column ]
+            - type: object
+              properties:
+                type: { type: string, enum: [ rename_column ] }
+                from: { type: string }
+                to: { type: string }
+              required: [ type, from, to ]
+            - type: object
+              properties:
+                type: { type: string, enum: [ set_default ] }
+                column_name: { type: string }
+                default_expression: { type: string }
+              required: [ type, column_name, default_expression ]
+            - type: object
+              properties:
+                type: { type: string, enum: [ drop_default ] }
+                column_name: { type: string }
+              required: [ type, column_name ]
+            - type: object
+              properties:
+                type: { type: string, enum: [ set_not_null ] }
+                column_name: { type: string }
+              required: [ type, column_name ]
+            - type: object
+              properties:
+                type: { type: string, enum: [ drop_not_null ] }
+                column_name: { type: string }
+              required: [ type, column_name ]
+      required: [ operations ]
+    DropTableRequest:
+      type: object
+      properties:
+        schema_name:
+          type: string
+          default: public
+        cascade:
+          type: boolean
+          default: false
+    DropColumnRequest:
+      type: object
+      properties:
+        schema_name:
+          type: string
+          default: public
+        cascade:
+          type: boolean
+          default: false
+    CreateIndexRequest:
+      type: object
+      properties:
+        schema_name:
+          type: string
+          default: public
+        table_name:
+          type: string
+        index_name:
+          type: string
+          nullable: true
+        columns:
+          type: array
+          items:
+            type: string
+        unique:
+          type: boolean
+          default: false
+        method:
+          type: string
+          default: btree
+      required: [ table_name, columns ]
+    DropIndexRequest:
+      type: object
+      properties:
+        schema_name:
+          type: string
+          default: public
+    ManagementCapabilities:
+      type: object
+      properties:
+        backend:
+          type: string
+        retention_mutation_supported:
+          type: boolean
+        replication_mutation_supported:
+          type: boolean
+        supported_operations:
+          type: array
+          items: { type: string }
+        required_rights:
+          type: array
+          items:
+            type: object
+            properties:
+              operation: { type: string }
+              required_right: { type: string }
+        allowed_index_methods:
+          type: array
+          items: { type: string }
+        allowed_column_data_types:
+          type: array
+          items: { type: string }
+    ManagementCapabilitiesEnvelope:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/ManagementCapabilities'
+    ClusterMirrorHealth:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        status:
+          type: string
+          enum: [ online, offline ]
+        latency_ms:
+          type: number
+          nullable: true
+        download_bytes_per_sec:
+          type: number
+          nullable: true
+        cargo_toml_version:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+    ClusterHealthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        version:
+          type: string
+        athena_api:
+          type: string
+        athena_deadpool:
+          type: string
+        athena_scylladb:
+          type: string
+        cargo_toml_version:
+          type: string
+        mirrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterMirrorHealth'

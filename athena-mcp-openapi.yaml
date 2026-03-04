@@ -323,6 +323,629 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ToolResult'
+  /tools/ping:
+    post:
+      summary: Run Athena health check
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_api_root:
+    post:
+      summary: Fetch Athena API root metadata
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_cluster_health:
+    post:
+      summary: Check Athena cluster mirror health
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_management_capabilities:
+    post:
+      summary: Read Athena management capabilities
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/create_table:
+    post:
+      summary: Create a managed table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTableToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/edit_table:
+    post:
+      summary: Apply managed table alterations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTableToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/drop_table:
+    post:
+      summary: Drop a managed table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DropTableToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/drop_column:
+    post:
+      summary: Drop a managed table column
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DropColumnToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/create_index:
+    post:
+      summary: Create a managed index
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIndexToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/drop_index:
+    post:
+      summary: Drop a managed index
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DropIndexToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/run_pipeline:
+    post:
+      summary: Run an Athena pipeline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunPipelineRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_available_clients:
+    post:
+      summary: List available Athena clients
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_api_keys:
+    post:
+      summary: List Athena API keys
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/create_api_key:
+    post:
+      summary: Create an Athena API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/update_api_key:
+    post:
+      summary: Update an Athena API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApiKeyToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/delete_api_key:
+    post:
+      summary: Delete an Athena API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteApiKeyToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_api_key_rights:
+    post:
+      summary: List Athena API key rights
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/create_api_key_right:
+    post:
+      summary: Create an Athena API key right
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyRightToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/update_api_key_right:
+    post:
+      summary: Update an Athena API key right
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApiKeyRightToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/delete_api_key_right:
+    post:
+      summary: Delete an Athena API key right
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteApiKeyToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_api_key_config:
+    post:
+      summary: Read Athena API key config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/update_api_key_config:
+    post:
+      summary: Update Athena API key config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApiKeyConfigToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_api_key_clients:
+    post:
+      summary: List API key client overrides
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/save_api_key_client:
+    post:
+      summary: Create or update an API key client override
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveApiKeyClientToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/delete_api_key_client:
+    post:
+      summary: Delete an API key client override
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteApiKeyClientToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_athena_clients_admin:
+    post:
+      summary: List Athena clients in admin catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/create_athena_client:
+    post:
+      summary: Create an Athena client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveAthenaClientToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/update_athena_client:
+    post:
+      summary: Update an Athena client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveAthenaClientToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/delete_athena_client:
+    post:
+      summary: Delete an Athena client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteApiKeyClientToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/freeze_athena_client:
+    post:
+      summary: Freeze or unfreeze an Athena client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreezeAthenaClientToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_client_statistics:
+    post:
+      summary: List Athena client statistics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/refresh_client_statistics:
+    post:
+      summary: Refresh Athena client statistics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_client_statistics:
+    post:
+      summary: Get per-client Athena statistics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteApiKeyClientToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/toggle_supabase_ssl_enforcement:
+    post:
+      summary: Toggle Supabase SSL enforcement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToggleSupabaseSslEnforcementToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_router_registry:
+    post:
+      summary: List Athena router registry entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/list_registry_entries:
+    post:
+      summary: List Athena registry entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_registry_entry:
+    post:
+      summary: Get an Athena registry entry by ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetRegistryEntryToolRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_metrics:
+    post:
+      summary: Fetch Athena metrics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_embedded_openapi:
+    post:
+      summary: Download Athena embedded OpenAPI
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+  /tools/get_websocket_info:
+    post:
+      summary: Read Athena websocket contract metadata
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyRequest'
+      responses:
+        '200':
+          description: Tool result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
 components:
   schemas:
     EmptyRequest:
@@ -585,6 +1208,236 @@ components:
       - set
       - where_column
       - where_value
+    CreateTableToolRequest:
+      type: object
+      properties:
+        table_name:
+          type: string
+          description: Table name to create
+        schema_name:
+          type: string
+          description: Schema name (defaults to public)
+        columns:
+          type: array
+          description: Optional column definitions
+          items:
+            type: object
+        if_not_exists:
+          type: boolean
+          description: Compatibility flag accepted by Athena
+      required:
+      - table_name
+    EditTableToolRequest:
+      type: object
+      properties:
+        table_name:
+          type: string
+        schema_name:
+          type: string
+        operations:
+          type: array
+          items:
+            type: object
+      required:
+      - table_name
+      - operations
+    DropTableToolRequest:
+      type: object
+      properties:
+        table_name:
+          type: string
+        schema_name:
+          type: string
+        cascade:
+          type: boolean
+      required:
+      - table_name
+    DropColumnToolRequest:
+      type: object
+      properties:
+        table_name:
+          type: string
+        column_name:
+          type: string
+        schema_name:
+          type: string
+        cascade:
+          type: boolean
+      required:
+      - table_name
+      - column_name
+    CreateIndexToolRequest:
+      type: object
+      properties:
+        table_name:
+          type: string
+        columns:
+          type: array
+          items:
+            type: string
+        schema_name:
+          type: string
+        index_name:
+          type: string
+        unique:
+          type: boolean
+        method:
+          type: string
+      required:
+      - table_name
+      - columns
+    DropIndexToolRequest:
+      type: object
+      properties:
+        index_name:
+          type: string
+        schema_name:
+          type: string
+      required:
+      - index_name
+    RunPipelineRequest:
+      type: object
+      properties:
+        pipeline:
+          type: string
+        source:
+          type: object
+        transform:
+          type: object
+        sink:
+          type: object
+    CreateApiKeyToolRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        client_name:
+          type: string
+        expires_at:
+          type: string
+        rights:
+          type: array
+          items:
+            type: string
+      required:
+      - name
+    UpdateApiKeyToolRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        client_name:
+          type: string
+        expires_at:
+          type: string
+        is_active:
+          type: boolean
+        rights:
+          type: array
+          items:
+            type: string
+      required:
+      - id
+    DeleteApiKeyToolRequest:
+      type: object
+      properties:
+        id:
+          type: string
+      required:
+      - id
+    ApiKeyRightToolRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required:
+      - name
+    UpdateApiKeyRightToolRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+      required:
+      - id
+    UpdateApiKeyConfigToolRequest:
+      type: object
+      properties:
+        enforce_api_keys:
+          type: boolean
+      required:
+      - enforce_api_keys
+    SaveApiKeyClientToolRequest:
+      type: object
+      properties:
+        client_name:
+          type: string
+        enforce_api_keys:
+          type: boolean
+      required:
+      - client_name
+      - enforce_api_keys
+    DeleteApiKeyClientToolRequest:
+      type: object
+      properties:
+        client_name:
+          type: string
+      required:
+      - client_name
+    SaveAthenaClientToolRequest:
+      type: object
+      properties:
+        client_name:
+          type: string
+        description:
+          type: string
+        pg_uri:
+          type: string
+        pg_uri_env_var:
+          type: string
+        is_active:
+          type: boolean
+      required:
+      - client_name
+    FreezeAthenaClientToolRequest:
+      type: object
+      properties:
+        client_name:
+          type: string
+        is_frozen:
+          type: boolean
+      required:
+      - client_name
+      - is_frozen
+    ToggleSupabaseSslEnforcementToolRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        access_token:
+          type: string
+        project_ref:
+          type: string
+      required:
+      - enabled
+    GetRegistryEntryToolRequest:
+      type: object
+      properties:
+        api_registry_id:
+          type: string
+      required:
+      - api_registry_id
     ToolResult:
       type: object
       properties:

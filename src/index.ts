@@ -205,6 +205,138 @@ function parseTableRef(table: string, defaultSchema?: string): TableRef {
   };
 }
 
+function jsonContent(data: unknown): {
+  content: [{ type: "text"; text: string }];
+} {
+  return {
+    content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+  };
+}
+
+function textContent(text: string): {
+  content: [{ type: "text"; text: string }];
+} {
+  return {
+    content: [{ type: "text", text }],
+  };
+}
+
+function readOnlyToolError(toolName: string): {
+  isError: true;
+  content: [{ type: "text"; text: string }];
+} {
+  return {
+    isError: true,
+    content: [
+      {
+        type: "text",
+        text: `${toolName} is disabled: server is running in read-only mode.`,
+      },
+    ],
+  };
+}
+
+const managementColumnSchema = z.object({
+  name: z.string().describe("Column name"),
+  data_type: z.string().describe("PostgreSQL data type"),
+  nullable: z.boolean().optional().describe("Whether the column is nullable"),
+  default_expression: z
+    .string()
+    .optional()
+    .describe("Optional SQL default expression"),
+});
+
+const editTableOperationSchema = z.union([
+  z.object({
+    type: z.literal("add_column"),
+    column: managementColumnSchema,
+  }),
+  z.object({
+    type: z.literal("rename_column"),
+    from: z.string(),
+    to: z.string(),
+  }),
+  z.object({
+    type: z.literal("set_default"),
+    column_name: z.string(),
+    default_expression: z.string(),
+  }),
+  z.object({
+    type: z.literal("drop_default"),
+    column_name: z.string(),
+  }),
+  z.object({
+    type: z.literal("set_not_null"),
+    column_name: z.string(),
+  }),
+  z.object({
+    type: z.literal("drop_not_null"),
+    column_name: z.string(),
+  }),
+]);
+
+const pipelineConditionSchema = z.object({
+  eq_column: z.string(),
+  eq_value: z.string(),
+});
+
+const pipelineSourceSchema = z.object({
+  table_name: z.string().optional(),
+  view_name: z.string().optional(),
+  columns: z.array(z.string()).optional(),
+  conditions: z.array(pipelineConditionSchema).optional(),
+  limit: z.number().int().positive().optional(),
+});
+
+const pipelineTransformSchema = z.object({
+  group_by: z.string().optional(),
+  time_granularity: z.enum(["day", "hour", "minute"]).optional(),
+  aggregation_column: z.string().optional(),
+  aggregation_strategy: z.enum(["cumulative_sum"]).optional(),
+  aggregation_dedup: z.boolean().optional(),
+});
+
+const pipelineSinkSchema = z.object({
+  table_name: z.string().optional(),
+});
+
+const createApiKeySchema = z.object({
+  name: z.string().describe("Human-readable API key name"),
+  description: z.string().optional().describe("Optional description"),
+  client_name: z
+    .string()
+    .optional()
+    .describe("Optional client binding for this key"),
+  expires_at: z
+    .string()
+    .optional()
+    .describe("Optional ISO date-time expiry"),
+  rights: z.array(z.string()).optional().describe("Rights to grant"),
+});
+
+const updateApiKeySchema = z.object({
+  id: z.string().describe("API key UUID"),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  client_name: z.string().optional(),
+  expires_at: z.string().optional(),
+  is_active: z.boolean().optional(),
+  rights: z.array(z.string()).optional(),
+});
+
+const apiKeyRightSchema = z.object({
+  name: z.string().describe("Right name"),
+  description: z.string().optional().describe("Optional description"),
+});
+
+const saveAthenaClientSchema = z.object({
+  client_name: z.string().describe("Athena client name"),
+  description: z.string().optional(),
+  pg_uri: z.string().optional(),
+  pg_uri_env_var: z.string().optional(),
+  is_active: z.boolean().optional(),
+});
+
 // ─── MCP Server setup ─────────────────────────────────────────────────────────
 
 const server = new McpServer({
@@ -1132,6 +1264,654 @@ server.tool(
       content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
     };
   },
+);
+
+// ─── Tool: get_api_root ─────────────────────────────────────────────────────
+
+server.tool(
+  "get_api_root",
+  "Fetch Athena API root metadata, including the advertised route list.",
+  {},
+  async () => jsonContent(await apiFetch("/")),
+);
+
+// ─── Tool: ping ─────────────────────────────────────────────────────────────
+
+server.tool("ping", "Run the Athena health check endpoint.", {}, async () => {
+  const data = await apiFetch("/ping");
+  return textContent(String(data));
+});
+
+// ─── Tool: get_cluster_health ───────────────────────────────────────────────
+
+server.tool(
+  "get_cluster_health",
+  "Check Athena mirror reachability, latency, throughput, and version metadata.",
+  {},
+  async () => jsonContent(await apiFetch("/health/cluster")),
+);
+
+// ─── Tool: get_management_capabilities ─────────────────────────────────────
+
+server.tool(
+  "get_management_capabilities",
+  "List Athena management API capabilities and required rights for the current client.",
+  {},
+  async () => jsonContent(await apiFetch("/management/capabilities")),
+);
+
+// ─── Tool: create_table ─────────────────────────────────────────────────────
+
+server.tool(
+  "create_table",
+  "Create a managed table through Athena's management API. Blocked when read_only mode is enabled.",
+  {
+    table_name: z.string().describe("Table name to create"),
+    schema_name: z
+      .string()
+      .optional()
+      .describe("Schema name (defaults to public)"),
+    columns: z
+      .array(managementColumnSchema)
+      .optional()
+      .describe("Optional column definitions"),
+    if_not_exists: z
+      .boolean()
+      .optional()
+      .describe("Compatibility flag accepted by Athena"),
+  },
+  async ({ table_name, schema_name, columns, if_not_exists }) => {
+    if (READ_ONLY) return readOnlyToolError("create_table");
+    return jsonContent(
+      await apiFetch("/management/tables", {
+        method: "POST",
+        body: { table_name, schema_name, columns, if_not_exists },
+      }),
+    );
+  },
+);
+
+// ─── Tool: edit_table ───────────────────────────────────────────────────────
+
+server.tool(
+  "edit_table",
+  "Apply safe additive ALTER TABLE operations through Athena's management API. Blocked when read_only mode is enabled.",
+  {
+    table_name: z.string().describe("Target table name"),
+    schema_name: z
+      .string()
+      .optional()
+      .describe("Schema name (defaults to public)"),
+    operations: z
+      .array(editTableOperationSchema)
+      .describe("Ordered table alteration operations"),
+  },
+  async ({ table_name, schema_name, operations }) => {
+    if (READ_ONLY) return readOnlyToolError("edit_table");
+    return jsonContent(
+      await apiFetch(`/management/tables/${encodeURIComponent(table_name)}`, {
+        method: "PATCH",
+        body: { schema_name, operations },
+      }),
+    );
+  },
+);
+
+// ─── Tool: drop_table ───────────────────────────────────────────────────────
+
+server.tool(
+  "drop_table",
+  "Drop a managed table through Athena's management API. Blocked when read_only mode is enabled.",
+  {
+    table_name: z.string().describe("Target table name"),
+    schema_name: z
+      .string()
+      .optional()
+      .describe("Schema name (defaults to public)"),
+    cascade: z.boolean().optional().describe("Whether to cascade the drop"),
+  },
+  async ({ table_name, schema_name, cascade }) => {
+    if (READ_ONLY) return readOnlyToolError("drop_table");
+    return jsonContent(
+      await apiFetch(`/management/tables/${encodeURIComponent(table_name)}`, {
+        method: "DELETE",
+        body: { schema_name, cascade },
+      }),
+    );
+  },
+);
+
+// ─── Tool: drop_column ──────────────────────────────────────────────────────
+
+server.tool(
+  "drop_column",
+  "Drop a managed table column through Athena's management API. Blocked when read_only mode is enabled.",
+  {
+    table_name: z.string().describe("Target table name"),
+    column_name: z.string().describe("Column name to drop"),
+    schema_name: z
+      .string()
+      .optional()
+      .describe("Schema name (defaults to public)"),
+    cascade: z.boolean().optional().describe("Whether to cascade the drop"),
+  },
+  async ({ table_name, column_name, schema_name, cascade }) => {
+    if (READ_ONLY) return readOnlyToolError("drop_column");
+    return jsonContent(
+      await apiFetch(
+        `/management/tables/${encodeURIComponent(table_name)}/columns/${encodeURIComponent(column_name)}`,
+        {
+          method: "DELETE",
+          body: { schema_name, cascade },
+        },
+      ),
+    );
+  },
+);
+
+// ─── Tool: create_index ─────────────────────────────────────────────────────
+
+server.tool(
+  "create_index",
+  "Create an index through Athena's management API. Blocked when read_only mode is enabled.",
+  {
+    table_name: z.string().describe("Target table name"),
+    columns: z.array(z.string()).describe("Columns included in the index"),
+    schema_name: z
+      .string()
+      .optional()
+      .describe("Schema name (defaults to public)"),
+    index_name: z.string().optional().describe("Optional explicit index name"),
+    unique: z.boolean().optional().describe("Whether the index is unique"),
+    method: z
+      .string()
+      .optional()
+      .describe("Index access method (defaults to btree)"),
+  },
+  async ({ table_name, columns, schema_name, index_name, unique, method }) => {
+    if (READ_ONLY) return readOnlyToolError("create_index");
+    return jsonContent(
+      await apiFetch("/management/indexes", {
+        method: "POST",
+        body: { table_name, columns, schema_name, index_name, unique, method },
+      }),
+    );
+  },
+);
+
+// ─── Tool: drop_index ───────────────────────────────────────────────────────
+
+server.tool(
+  "drop_index",
+  "Drop an index through Athena's management API. Blocked when read_only mode is enabled.",
+  {
+    index_name: z.string().describe("Index name to drop"),
+    schema_name: z
+      .string()
+      .optional()
+      .describe("Schema name (defaults to public)"),
+  },
+  async ({ index_name, schema_name }) => {
+    if (READ_ONLY) return readOnlyToolError("drop_index");
+    return jsonContent(
+      await apiFetch(`/management/indexes/${encodeURIComponent(index_name)}`, {
+        method: "DELETE",
+        body: { schema_name },
+      }),
+    );
+  },
+);
+
+// ─── Tool: run_pipeline ─────────────────────────────────────────────────────
+
+server.tool(
+  "run_pipeline",
+  "Run a config-driven Athena pipeline (source -> transform -> sink).",
+  {
+    pipeline: z
+      .string()
+      .optional()
+      .describe("Optional prebuilt pipeline name from Athena config"),
+    source: pipelineSourceSchema.optional().describe("Pipeline source config"),
+    transform: pipelineTransformSchema
+      .optional()
+      .describe("Pipeline transform config"),
+    sink: pipelineSinkSchema.optional().describe("Pipeline sink config"),
+  },
+  async ({ pipeline, source, transform, sink }) =>
+    jsonContent(
+      await apiFetch("/pipelines", {
+        method: "POST",
+        body: { pipeline, source, transform, sink },
+      }),
+    ),
+);
+
+// ─── Tool: list_available_clients ──────────────────────────────────────────
+
+server.tool(
+  "list_available_clients",
+  "List Athena/Postgres clients available to the current admin key.",
+  {},
+  async () => jsonContent(await apiFetch("/clients")),
+);
+
+// ─── Tool: list_api_keys ────────────────────────────────────────────────────
+
+server.tool(
+  "list_api_keys",
+  "List Athena API keys using the admin API.",
+  {},
+  async () => jsonContent(await apiFetch("/admin/api-keys")),
+);
+
+// ─── Tool: create_api_key ───────────────────────────────────────────────────
+
+server.tool(
+  "create_api_key",
+  "Create an Athena API key. Blocked when read_only mode is enabled.",
+  createApiKeySchema.shape,
+  async (input) => {
+    if (READ_ONLY) return readOnlyToolError("create_api_key");
+    return jsonContent(
+      await apiFetch("/admin/api-keys", { method: "POST", body: input }),
+    );
+  },
+);
+
+// ─── Tool: update_api_key ───────────────────────────────────────────────────
+
+server.tool(
+  "update_api_key",
+  "Update an existing Athena API key. Blocked when read_only mode is enabled.",
+  updateApiKeySchema.shape,
+  async ({ id, ...body }) => {
+    if (READ_ONLY) return readOnlyToolError("update_api_key");
+    return jsonContent(
+      await apiFetch(`/admin/api-keys/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        body,
+      }),
+    );
+  },
+);
+
+// ─── Tool: delete_api_key ───────────────────────────────────────────────────
+
+server.tool(
+  "delete_api_key",
+  "Delete an Athena API key. Blocked when read_only mode is enabled.",
+  {
+    id: z.string().describe("API key UUID"),
+  },
+  async ({ id }) => {
+    if (READ_ONLY) return readOnlyToolError("delete_api_key");
+    return jsonContent(
+      await apiFetch(`/admin/api-keys/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      }),
+    );
+  },
+);
+
+// ─── Tool: list_api_key_rights ──────────────────────────────────────────────
+
+server.tool(
+  "list_api_key_rights",
+  "List available Athena API key rights.",
+  {},
+  async () => jsonContent(await apiFetch("/admin/api-key-rights")),
+);
+
+// ─── Tool: create_api_key_right ─────────────────────────────────────────────
+
+server.tool(
+  "create_api_key_right",
+  "Create an Athena API key right. Blocked when read_only mode is enabled.",
+  apiKeyRightSchema.shape,
+  async (input) => {
+    if (READ_ONLY) return readOnlyToolError("create_api_key_right");
+    return jsonContent(
+      await apiFetch("/admin/api-key-rights", {
+        method: "POST",
+        body: input,
+      }),
+    );
+  },
+);
+
+// ─── Tool: update_api_key_right ─────────────────────────────────────────────
+
+server.tool(
+  "update_api_key_right",
+  "Update an Athena API key right. Blocked when read_only mode is enabled.",
+  {
+    id: z.string().describe("API key right UUID"),
+    name: z.string().optional(),
+    description: z.string().optional(),
+  },
+  async ({ id, ...body }) => {
+    if (READ_ONLY) return readOnlyToolError("update_api_key_right");
+    return jsonContent(
+      await apiFetch(`/admin/api-key-rights/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        body,
+      }),
+    );
+  },
+);
+
+// ─── Tool: delete_api_key_right ─────────────────────────────────────────────
+
+server.tool(
+  "delete_api_key_right",
+  "Delete an Athena API key right. Blocked when read_only mode is enabled.",
+  {
+    id: z.string().describe("API key right UUID"),
+  },
+  async ({ id }) => {
+    if (READ_ONLY) return readOnlyToolError("delete_api_key_right");
+    return jsonContent(
+      await apiFetch(`/admin/api-key-rights/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      }),
+    );
+  },
+);
+
+// ─── Tool: get_api_key_config ───────────────────────────────────────────────
+
+server.tool(
+  "get_api_key_config",
+  "Read the global Athena API key enforcement configuration.",
+  {},
+  async () => jsonContent(await apiFetch("/admin/api-key-config")),
+);
+
+// ─── Tool: update_api_key_config ────────────────────────────────────────────
+
+server.tool(
+  "update_api_key_config",
+  "Update global Athena API key enforcement. Blocked when read_only mode is enabled.",
+  {
+    enforce_api_keys: z.boolean().describe("Whether API keys are globally enforced"),
+  },
+  async ({ enforce_api_keys }) => {
+    if (READ_ONLY) return readOnlyToolError("update_api_key_config");
+    return jsonContent(
+      await apiFetch("/admin/api-key-config", {
+        method: "PUT",
+        body: { enforce_api_keys },
+      }),
+    );
+  },
+);
+
+// ─── Tool: list_api_key_clients ─────────────────────────────────────────────
+
+server.tool(
+  "list_api_key_clients",
+  "List per-client Athena API key enforcement overrides.",
+  {},
+  async () => jsonContent(await apiFetch("/admin/api-key-clients")),
+);
+
+// ─── Tool: save_api_key_client ──────────────────────────────────────────────
+
+server.tool(
+  "save_api_key_client",
+  "Create or update a per-client Athena API key enforcement override. Blocked when read_only mode is enabled.",
+  {
+    client_name: z.string().describe("Athena client name"),
+    enforce_api_keys: z.boolean().describe("Whether API keys are enforced for this client"),
+  },
+  async ({ client_name, enforce_api_keys }) => {
+    if (READ_ONLY) return readOnlyToolError("save_api_key_client");
+    return jsonContent(
+      await apiFetch(
+        `/admin/api-key-clients/${encodeURIComponent(client_name)}`,
+        {
+          method: "PUT",
+          body: { enforce_api_keys },
+        },
+      ),
+    );
+  },
+);
+
+// ─── Tool: delete_api_key_client ────────────────────────────────────────────
+
+server.tool(
+  "delete_api_key_client",
+  "Delete a per-client Athena API key enforcement override. Blocked when read_only mode is enabled.",
+  {
+    client_name: z.string().describe("Athena client name"),
+  },
+  async ({ client_name }) => {
+    if (READ_ONLY) return readOnlyToolError("delete_api_key_client");
+    return jsonContent(
+      await apiFetch(
+        `/admin/api-key-clients/${encodeURIComponent(client_name)}`,
+        {
+          method: "DELETE",
+        },
+      ),
+    );
+  },
+);
+
+// ─── Tool: list_athena_clients_admin ────────────────────────────────────────
+
+server.tool(
+  "list_athena_clients_admin",
+  "List Athena clients from the database-backed admin catalog.",
+  {},
+  async () => jsonContent(await apiFetch("/admin/clients")),
+);
+
+// ─── Tool: create_athena_client ─────────────────────────────────────────────
+
+server.tool(
+  "create_athena_client",
+  "Create an Athena client in the admin catalog. Blocked when read_only mode is enabled.",
+  saveAthenaClientSchema.shape,
+  async (input) => {
+    if (READ_ONLY) return readOnlyToolError("create_athena_client");
+    return jsonContent(
+      await apiFetch("/admin/clients", { method: "POST", body: input }),
+    );
+  },
+);
+
+// ─── Tool: update_athena_client ─────────────────────────────────────────────
+
+server.tool(
+  "update_athena_client",
+  "Update an Athena client in the admin catalog. Blocked when read_only mode is enabled.",
+  saveAthenaClientSchema.shape,
+  async ({ client_name, ...body }) => {
+    if (READ_ONLY) return readOnlyToolError("update_athena_client");
+    return jsonContent(
+      await apiFetch(`/admin/clients/${encodeURIComponent(client_name)}`, {
+        method: "PATCH",
+        body: { client_name, ...body },
+      }),
+    );
+  },
+);
+
+// ─── Tool: delete_athena_client ─────────────────────────────────────────────
+
+server.tool(
+  "delete_athena_client",
+  "Soft-delete an Athena client from the admin catalog. Blocked when read_only mode is enabled.",
+  {
+    client_name: z.string().describe("Athena client name"),
+  },
+  async ({ client_name }) => {
+    if (READ_ONLY) return readOnlyToolError("delete_athena_client");
+    return jsonContent(
+      await apiFetch(`/admin/clients/${encodeURIComponent(client_name)}`, {
+        method: "DELETE",
+      }),
+    );
+  },
+);
+
+// ─── Tool: freeze_athena_client ─────────────────────────────────────────────
+
+server.tool(
+  "freeze_athena_client",
+  "Freeze or unfreeze an Athena client. Blocked when read_only mode is enabled.",
+  {
+    client_name: z.string().describe("Athena client name"),
+    is_frozen: z.boolean().describe("Whether the client should be frozen"),
+  },
+  async ({ client_name, is_frozen }) => {
+    if (READ_ONLY) return readOnlyToolError("freeze_athena_client");
+    return jsonContent(
+      await apiFetch(
+        `/admin/clients/${encodeURIComponent(client_name)}/freeze`,
+        {
+          method: "PUT",
+          body: { is_frozen },
+        },
+      ),
+    );
+  },
+);
+
+// ─── Tool: list_client_statistics ───────────────────────────────────────────
+
+server.tool(
+  "list_client_statistics",
+  "List aggregated Athena client statistics from gateway logs.",
+  {},
+  async () => jsonContent(await apiFetch("/admin/clients/statistics")),
+);
+
+// ─── Tool: refresh_client_statistics ────────────────────────────────────────
+
+server.tool(
+  "refresh_client_statistics",
+  "Rebuild Athena client statistics from gateway logs. Blocked when read_only mode is enabled.",
+  {},
+  async () => {
+    if (READ_ONLY) return readOnlyToolError("refresh_client_statistics");
+    return jsonContent(
+      await apiFetch("/admin/clients/statistics/refresh", { method: "POST" }),
+    );
+  },
+);
+
+// ─── Tool: get_client_statistics ────────────────────────────────────────────
+
+server.tool(
+  "get_client_statistics",
+  "Inspect per-client Athena statistics and touched tables.",
+  {
+    client_name: z.string().describe("Athena client name"),
+  },
+  async ({ client_name }) =>
+    jsonContent(
+      await apiFetch(
+        `/admin/clients/${encodeURIComponent(client_name)}/statistics`,
+      ),
+    ),
+);
+
+// ─── Tool: toggle_supabase_ssl_enforcement ──────────────────────────────────
+
+server.tool(
+  "toggle_supabase_ssl_enforcement",
+  "Enable or disable Supabase SSL enforcement for a project. Blocked when read_only mode is enabled.",
+  {
+    enabled: z
+      .boolean()
+      .describe("Whether Supabase SSL enforcement should be enabled"),
+    access_token: z
+      .string()
+      .optional()
+      .describe("Optional override for SUPABASE_ACCESS_TOKEN"),
+    project_ref: z
+      .string()
+      .optional()
+      .describe("Optional override for PROJECT_REF"),
+  },
+  async ({ enabled, access_token, project_ref }) => {
+    if (READ_ONLY) return readOnlyToolError("toggle_supabase_ssl_enforcement");
+    return jsonContent(
+      await apiFetch("/api/v2/supabase/ssl_enforcement", {
+        method: "POST",
+        body: { enabled, access_token, project_ref },
+      }),
+    );
+  },
+);
+
+// ─── Tool: list_router_registry ─────────────────────────────────────────────
+
+server.tool(
+  "list_router_registry",
+  "List Athena router registry entries.",
+  {},
+  async () => jsonContent(await apiFetch("/router/registry")),
+);
+
+// ─── Tool: list_registry_entries ────────────────────────────────────────────
+
+server.tool(
+  "list_registry_entries",
+  "List API registry entries from Athena.",
+  {},
+  async () => jsonContent(await apiFetch("/registry")),
+);
+
+// ─── Tool: get_registry_entry ───────────────────────────────────────────────
+
+server.tool(
+  "get_registry_entry",
+  "Fetch a specific API registry entry by ID.",
+  {
+    api_registry_id: z.string().describe("Registry row identifier"),
+  },
+  async ({ api_registry_id }) =>
+    jsonContent(
+      await apiFetch(`/registry/${encodeURIComponent(api_registry_id)}`),
+    ),
+);
+
+// ─── Tool: get_metrics ──────────────────────────────────────────────────────
+
+server.tool(
+  "get_metrics",
+  "Fetch Athena's Prometheus metrics payload.",
+  {},
+  async () => {
+    const data = await apiFetch("/metrics");
+    return textContent(String(data));
+  },
+);
+
+// ─── Tool: get_embedded_openapi ─────────────────────────────────────────────
+
+server.tool(
+  "get_embedded_openapi",
+  "Download Athena's embedded OpenAPI YAML document.",
+  {},
+  async () => {
+    const data = await apiFetch("/openapi.yaml");
+    return textContent(String(data));
+  },
+);
+
+// ─── Tool: get_websocket_info ───────────────────────────────────────────────
+
+server.tool(
+  "get_websocket_info",
+  "Read Athena's websocket gateway contract metadata.",
+  {},
+  async () => jsonContent(await apiFetch("/wss/info")),
 );
 
 // ─── Start ────────────────────────────────────────────────────────────────────
