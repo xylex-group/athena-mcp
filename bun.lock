@@ -6,7 +6,7 @@
       "name": "athena-mcp",
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.27.0",
-        "zod": "^3.25.0 || ^4.0.0",
+        "zod": "^3.25.0 || ^4.0.0"
       },
       "devDependencies": {
         "@eslint/js": "^9.17.0",
@@ -20,9 +20,9 @@
         "tsup": "^8.4.0",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.18.0",
-        "vitest": "^2.1.0",
-      },
-    },
+        "vitest": "^2.1.0"
+      }
+    }
   },
   "packages": {
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.27.3", "", { "os": "aix", "cpu": "ppc64" }, "sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg=="],
