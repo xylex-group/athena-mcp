@@ -70,7 +70,7 @@ const cli = parseCliArgs();
 const BASE_URL_RAW = (
   cli.baseUrl ??
   process.env.ATHENA_BASE_URL ??
-  "https://mirror3.athena-db.com"
+  "https://mirror4.athena-cluster.com"
 ).trim();
 if (
   !BASE_URL_RAW.startsWith("http://") &&
