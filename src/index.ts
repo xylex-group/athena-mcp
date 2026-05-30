@@ -85,7 +85,7 @@ const API_KEY = (cli.apiKey ?? process.env.ATHENA_API_KEY ?? "").trim();
 const ATHENA_CLIENT = (
   cli.client ??
   process.env.ATHENA_CLIENT ??
-  "railway_direct"
+  "the-ark-of-floris"
 ).trim();
 const READ_ONLY =
   cli.readOnly !== undefined
