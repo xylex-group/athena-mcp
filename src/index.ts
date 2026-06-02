@@ -83,7 +83,7 @@ if (
 const BASE_URL = BASE_URL_RAW.replace(/\/+$/, "");
 const API_KEY = (cli.apiKey ?? process.env.ATHENA_API_KEY ?? "").trim();
 // Temporary deploy workaround: force a stable client header value.
-const ATHENA_CLIENT = "the-ark-of-floris";
+const ATHENA_CLIENT = "the-ark-of-floris-v2";
 const READ_ONLY =
   cli.readOnly !== undefined
     ? !!cli.readOnly
