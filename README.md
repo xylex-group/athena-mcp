@@ -54,7 +54,16 @@ MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Ath
 
 **Clients**
 
-- [x] `list_available_clients`: List Athena/Postgres clients available to the current admin key
+- [x] `list_available_clients`: List the MCP server's configured Athena client allowlist and, when available, the remote Athena client catalog response
+
+**Storage**
+
+- [x] Managed file/catalog bindings: `storage_credentials_list`, `storage_catalog_list`, `storage_catalog_create`, `storage_catalog_update`, `storage_catalog_delete`, `storage_file_upload`, `storage_file_upload_many`, `storage_file_list`, `storage_file_get`, `storage_file_update`, `storage_file_delete`, `storage_file_url`, `storage_file_proxy`, `storage_file_visibility_update`, `storage_file_visibility_set`, `storage_folder_delete`, `storage_folder_move`
+- [x] Raw object/bucket bindings: `storage_object_list`, `storage_object_head`, `storage_object_update`, `storage_object_url`, `storage_object_delete`, `storage_object_upload_url`, `storage_object_folder_create`, `storage_object_folder_delete`, `storage_object_folder_rename`, `storage_bucket_list`, `storage_bucket_create`, `storage_bucket_delete`, `storage_bucket_cors_get`, `storage_bucket_cors_set`, `storage_bucket_cors_delete`
+
+**Admin API (experimental)**
+
+- Admin tools are only registered when `ATHENA_ADMIN_EXPERIMENTAL_ENABLED=true`
 - [x] `list_athena_clients_admin`: List Athena clients from the database-backed admin catalog
 - [x] `create_athena_client`: Create an Athena client in the admin catalog. Blocked when `read_only` mode is enabled
 - [x] `update_athena_client`: Update an Athena client in the admin catalog. Blocked when `read_only` mode is enabled
@@ -122,7 +131,7 @@ npx -y @xylex-group/athena-mcp
    - **Type:** Command
    - **Command:** `npx`
    - **Args:** `-y`, `--package=git+https://github.com/xylex-group/athena-mcp.git`, `athena-mcp`
-   - **Env:** Add `ATHENA_API_KEY`, `ATHENA_CLIENT` (for X-Athena-Client header), `READ_ONLY`, etc.
+   - **Env:** Add `ATHENA_API_KEY`, `ATHENA_CLIENT`, `ATHENA_AVAILABLE_CLIENTS`, `READ_ONLY`, and optionally `ATHENA_ADMIN_EXPERIMENTAL_ENABLED`
 
 Or add to `.cursor/mcp.json` in your project:
 
@@ -154,7 +163,9 @@ Or use env (good for secrets):
       "args": ["-y", "--package=git+https://github.com/xylex-group/athena-mcp.git", "athena-mcp"],
       "env": {
         "ATHENA_API_KEY": "api-key-1234567890",
-        "ATHENA_CLIENT": "railway_direct",
+        "ATHENA_CLIENT": "xylex_cloud",
+        "ATHENA_AVAILABLE_CLIENTS": "xylex_cloud,analytics",
+        "ATHENA_ADMIN_EXPERIMENTAL_ENABLED": "false",
         "READ_ONLY": "false"
       }
     }
@@ -338,7 +349,12 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 | `create_index`                  | Create an index via management API (blocked in read-only mode)       |
 | `drop_index`                    | Drop an index via management API (blocked in read-only mode)         |
 | `run_pipeline`                  | Execute a config-driven Athena pipeline                              |
-| `list_available_clients`        | List Athena/Postgres clients exposed by the admin API                |
+| `list_available_clients`        | Show the configured Athena client allowlist and remote client catalog |
+| `storage_credentials_list`      | List managed storage credentials                                     |
+| `storage_catalog_list`          | List managed storage catalogs                                        |
+| `storage_file_list`             | List managed storage files                                           |
+| `storage_object_list`           | List raw S3-compatible objects                                       |
+| `storage_bucket_list`           | List storage buckets                                                 |
 | `list_api_keys`                 | List Athena API keys                                                 |
 | `create_api_key`                | Create an Athena API key (blocked in read-only mode)                 |
 | `update_api_key`                | Update an Athena API key (blocked in read-only mode)                 |
@@ -376,22 +392,24 @@ Set the following environment variables before starting the server:
 
 | Variable          | Description                                                                      | Default                         |
 | ----------------- | -------------------------------------------------------------------------------- | ------------------------------- |
-| `ATHENA_BASE_URL` | Base URL of the Athena API                                                       | `https://mirror3.athena-db.com` |
+| `ATHENA_BASE_URL` | Base URL of the Athena API                                                       | `https://mirror4.athena-cluster.com` |
 | `ATHENA_API_KEY`  | API key (sent as `apikey` / `x-api-key` headers)                                 | _(empty)_                       |
-| `ATHENA_CLIENT`   | Value for the `X-Athena-Client` API header (e.g. `railway_direct`, `postgresql`) | `railway_direct`                |
+| `ATHENA_CLIENT`   | Default value for the `X-Athena-Client` API header                               | _(required if no allowlist)_    |
+| `ATHENA_AVAILABLE_CLIENTS` | Comma-separated allowlist of Athena clients this MCP server may route to | `ATHENA_CLIENT`                 |
+| `ATHENA_ADMIN_EXPERIMENTAL_ENABLED` | Set to `true` to register admin-only tool surfaces                     | `false`                         |
 | `READ_ONLY`       | Set to `true` to disable write operations                                        | `false`                         |
 | `HEALTH_PORT`     | Port for HTTP health server (GET /health returns version). Omit to disable       | _(disabled)_                    |
 
 These can also be passed as CLI args (override env vars):
 
 ```bash
-npx -y --package=git+https://github.com/xylex-group/athena-mcp.git athena-mcp --athena-base-url=https://api.example.com --athena-api-key=xxx --athena-client=railway_direct --read-only
+npx -y --package=git+https://github.com/xylex-group/athena-mcp.git athena-mcp --athena-base-url=https://api.example.com --athena-api-key=xxx --athena-client=xylex_cloud --athena-available-clients=xylex_cloud,analytics --read-only
 ```
 
 Or with the published package:
 
 ```bash
-npx -y @xylex-group/athena-mcp --athena-base-url=https://api.example.com --athena-api-key=xxx --athena-client=railway_direct --read-only
+npx -y @xylex-group/athena-mcp --athena-base-url=https://api.example.com --athena-api-key=xxx --athena-client=xylex_cloud --athena-available-clients=xylex_cloud,analytics --read-only
 ```
 
 ### Read-only mode
@@ -400,6 +418,13 @@ When `READ_ONLY=true`:
 
 - `apply_migration`, `insert_row`, `delete_row`, `update_row`, `create_table`, `edit_table`, `drop_table`, `drop_column`, `create_index`, `drop_index`, `create_api_key`, `update_api_key`, `delete_api_key`, `create_api_key_right`, `update_api_key_right`, `delete_api_key_right`, `update_api_key_config`, `save_api_key_client`, `delete_api_key_client`, `create_athena_client`, `update_athena_client`, `delete_athena_client`, `freeze_athena_client`, `refresh_client_statistics`, and `toggle_supabase_ssl_enforcement` return an error immediately.
 - `execute_sql` rejects queries containing write keywords (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ALTER`, `TRUNCATE`, `GRANT`, `REVOKE`, `REPLACE`).
+
+### Client routing
+
+- Every tool call uses the configured default client unless the MCP client supplies the optional `client` argument.
+- The optional `client` argument is only exposed when `ATHENA_AVAILABLE_CLIENTS` contains more than one client.
+- The server rejects any client override that is not present in `ATHENA_AVAILABLE_CLIENTS`.
+- Admin tools are hidden entirely unless `ATHENA_ADMIN_EXPERIMENTAL_ENABLED=true`.
 
 ## Usage (generic MCP config)
 

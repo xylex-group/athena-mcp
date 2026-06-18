@@ -1,6 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
+  external: ["@xylex-group/athena"],
   entry: ["src/index.ts"],
   format: ["cjs"],
   target: "node18",

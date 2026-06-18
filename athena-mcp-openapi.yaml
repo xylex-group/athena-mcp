@@ -1,1333 +1,2076 @@
 openapi: 3.0.3
 info:
-  title: Athena MCP Tools
-  version: 0.1.0
-  description: |
-    MCP tool definitions for the Athena MCP server. Each tool is exposed over
-    POST endpoints so OpenAPI-aware clients can understand the tool inputs and
-    outputs before invoking the corresponding MCP methods.
+  title: "Athena MCP Tools"
+  version: 0.2.0
+  description: "MCP tool definitions for the Athena MCP server. Each tool is exposed over POST endpoints so OpenAPI-aware clients can understand the tool inputs and outputs before invoking the corresponding MCP methods. Most request schemas also accept an optional `client` override when the server is configured with multiple allowed Athena clients."
 servers:
-- url: https://athena-mcp.example.com/tools
+  - url: https://athena-mcp.example.com/tools
 paths:
   /tools/list_tables:
     post:
-      summary: List all tables
-      description: No arguments are required.
+      summary: "List all tables"
+      description: "List all tables available in the connected PostgreSQL database"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_extensions:
     post:
-      summary: List installed PostgreSQL extensions
+      summary: "List installed PostgreSQL extensions"
+      description: "List all installed PostgreSQL extensions. May return empty if the gateway does not expose extension metadata."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_migrations:
     post:
-      summary: List applied database migrations
+      summary: "List applied database migrations"
+      description: "List applied database migrations"
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ListMigrationsRequest'
+              $ref: "#/components/schemas/ListMigrationsRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/apply_migration:
     post:
-      summary: Apply a SQL migration
+      summary: "Apply a SQL migration"
+      description: "Apply a SQL migration against the connected database. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ApplyMigrationRequest'
+              $ref: "#/components/schemas/ApplyMigrationRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/execute_sql:
     post:
-      summary: Execute an arbitrary SQL query
+      summary: "Execute an arbitrary SQL query"
+      description: "Execute a raw SQL query against the connected database. Write operations are blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExecuteSqlRequest'
+              $ref: "#/components/schemas/ExecuteSqlRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_logs:
     post:
-      summary: Retrieve recent logs
+      summary: "Retrieve recent logs"
+      description: "Retrieve recent database or application logs"
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GetLogsRequest'
+              $ref: "#/components/schemas/GetLogsRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_columns_of_table:
     post:
-      summary: Describe columns using Athena's schema API
+      summary: "Describe columns using Athena's schema API"
+      description: "Describe columns for a table using Athena's schema API"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GetColumnsRequest'
+              $ref: "#/components/schemas/GetColumnsRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_table_metadata:
     post:
-      summary: Return table metadata plus column defaults and nullability
+      summary: "Return table metadata plus column defaults and nullability"
+      description: "Return the full metadata for a table: schema name, table name, and each column's name, type, default value, and nullable flag"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ListTableMetadataRequest'
+              $ref: "#/components/schemas/ListTableMetadataRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_schemas:
     post:
-      summary: List visible database schemas
+      summary: "List visible database schemas"
+      description: "List database schemas visible to the current Athena client"
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ListSchemasRequest'
+              $ref: "#/components/schemas/ListSchemasRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_views:
     post:
-      summary: List visible views and materialized views
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ListViewsRequest'
-      responses:
-        '200':
-          description: Tool result payload
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ToolResult'
-  /tools/get_row_by_eq_column_of_table:
-    post:
-      summary: Fetch rows for column equality conditions
+      summary: "List visible views and materialized views"
+      description: "List visible views (and optionally materialized views). Uses Athena schema API."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GetRowByEqColumnRequest'
+              $ref: "#/components/schemas/ListViewsRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_foreign_keys:
     post:
-      summary: List primary keys, foreign keys, and unique constraints
+      summary: "List primary keys, foreign keys, and unique constraints"
+      description: "List primary keys, foreign keys, and unique constraints for a table. Essential for understanding relationships and correct joins."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ListForeignKeysRequest'
+              $ref: "#/components/schemas/ListForeignKeysRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_table_sample:
     post:
-      summary: Sample rows from a table
+      summary: "Sample rows from a table"
+      description: "Sample rows from a table to understand its data shape. Quick alternative to writing SQL."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GetTableSampleRequest'
+              $ref: "#/components/schemas/GetTableSampleRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_indexes:
     post:
-      summary: List index definitions for a table
+      summary: "List index definitions for a table"
+      description: "List index definitions for a table. Helps with performance and query design."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ListIndexesRequest'
+              $ref: "#/components/schemas/ListIndexesRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/search_columns:
     post:
-      summary: Find tables and columns by name pattern
+      summary: "Find tables and columns by name pattern"
+      description: "Find tables and columns by name pattern. Speeds up schema discovery."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SearchColumnsRequest'
+              $ref: "#/components/schemas/SearchColumnsRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_row_by_id:
     post:
-      summary: Fetch rows by primary key value
+      summary: "Fetch rows by primary key value"
+      description: "Fetch rows by primary key column value. Simplifies the common fetch-by-id use case."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GetRowByIdRequest'
+              $ref: "#/components/schemas/GetRowByIdRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_all_table_metadata:
     post:
-      summary: Return metadata for all tables
+      summary: "Return metadata for all tables"
+      description: "Return metadata for all tables in one call: schema, name, columns, types, defaults, nullable. Uses Athena schema API."
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ListAllTableMetadataRequest'
+              $ref: "#/components/schemas/ListAllTableMetadataRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/insert_row:
     post:
-      summary: Insert a row into a table
+      summary: "Insert a row"
+      description: "Insert a row into a table. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InsertRowRequest'
+              $ref: "#/components/schemas/InsertRowRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/delete_row:
     post:
-      summary: Delete a row by primary key
+      summary: "Delete a row"
+      description: "Delete a row by primary key (resource_id). Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeleteRowRequest'
+              $ref: "#/components/schemas/DeleteRowRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/update_row:
     post:
-      summary: Update rows matching a condition
+      summary: "Update rows"
+      description: "Update rows matching a condition. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateRowRequest'
+              $ref: "#/components/schemas/UpdateRowRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
-  /tools/ping:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/get_row_by_eq_column_of_table:
     post:
-      summary: Run Athena health check
+      summary: "Fetch rows for column equality conditions"
+      description: "Fetch rows from a table where `column = value` using Athena's fetch endpoint"
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/GetRowByEqColumnRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_api_root:
     post:
-      summary: Fetch Athena API root metadata
+      summary: "Fetch Athena API root metadata"
+      description: "Fetch Athena API root metadata, including the advertised route list."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
+  /tools/ping:
+    post:
+      summary: "Run Athena health check"
+      description: "Run the Athena health check endpoint."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_cluster_health:
     post:
-      summary: Check Athena cluster mirror health
+      summary: "Inspect Athena cluster health"
+      description: "Check Athena mirror reachability, latency, throughput, and version metadata."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_management_capabilities:
     post:
-      summary: Read Athena management capabilities
+      summary: "Read management API capabilities"
+      description: "List Athena management API capabilities and required rights for the current client."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/create_table:
     post:
-      summary: Create a managed table
+      summary: "Create a managed table"
+      description: "Create a managed table through Athena's management API. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateTableToolRequest'
+              $ref: "#/components/schemas/CreateTableToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/edit_table:
     post:
-      summary: Apply managed table alterations
+      summary: "Edit a managed table"
+      description: "Apply safe additive ALTER TABLE operations through Athena's management API. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditTableToolRequest'
+              $ref: "#/components/schemas/EditTableToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/drop_table:
     post:
-      summary: Drop a managed table
+      summary: "Drop a managed table"
+      description: "Drop a managed table through Athena's management API. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DropTableToolRequest'
+              $ref: "#/components/schemas/DropTableToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/drop_column:
     post:
-      summary: Drop a managed table column
+      summary: "Drop a managed table column"
+      description: "Drop a managed table column through Athena's management API. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DropColumnToolRequest'
+              $ref: "#/components/schemas/DropColumnToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/create_index:
     post:
-      summary: Create a managed index
+      summary: "Create an index"
+      description: "Create an index through Athena's management API. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateIndexToolRequest'
+              $ref: "#/components/schemas/CreateIndexToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/drop_index:
     post:
-      summary: Drop a managed index
+      summary: "Drop an index"
+      description: "Drop an index through Athena's management API. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DropIndexToolRequest'
+              $ref: "#/components/schemas/DropIndexToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/run_pipeline:
     post:
-      summary: Run an Athena pipeline
+      summary: "Run an Athena pipeline"
+      description: "Run a config-driven Athena pipeline (source -> transform -> sink)."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RunPipelineRequest'
+              $ref: "#/components/schemas/RunPipelineRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_available_clients:
     post:
-      summary: List available Athena clients
+      summary: "List configured Athena clients"
+      description: "List the MCP server's configured Athena client allowlist and, when available, the remote Athena client catalog response."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_credentials_list:
+    post:
+      summary: "storage credentials list"
+      description: "List managed Athena storage credentials using the storage SDK binding."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_catalog_list:
+    post:
+      summary: "storage catalog list"
+      description: "List managed Athena storage catalogs."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_catalog_create:
+    post:
+      summary: "storage catalog create"
+      description: "Create a managed Athena storage catalog."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_catalog_update:
+    post:
+      summary: "storage catalog update"
+      description: "Update a managed Athena storage catalog."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageCatalogUpdateRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_catalog_delete:
+    post:
+      summary: "storage catalog delete"
+      description: "Delete a managed Athena storage catalog."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageCatalogIdRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_upload:
+    post:
+      summary: "storage file upload"
+      description: "Create an upload URL for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_upload_many:
+    post:
+      summary: "storage file upload many"
+      description: "Create multiple upload URLs for managed Athena storage files in one call."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_list:
+    post:
+      summary: "storage file list"
+      description: "List managed Athena storage files."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_get:
+    post:
+      summary: "storage file get"
+      description: "Get managed Athena storage file metadata."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileIdRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_update:
+    post:
+      summary: "storage file update"
+      description: "Update managed Athena storage file metadata."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileUpdateRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_delete:
+    post:
+      summary: "storage file delete"
+      description: "Delete a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileIdRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_url:
+    post:
+      summary: "storage file url"
+      description: "Generate a signed URL for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileUrlRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_proxy:
+    post:
+      summary: "storage file proxy"
+      description: "Proxy a managed Athena storage file and return response metadata plus text when the proxied content is text-based."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileUrlRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_visibility_update:
+    post:
+      summary: "storage file visibility update"
+      description: "PATCH-style visibility update for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageVisibilityRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_visibility_set:
+    post:
+      summary: "storage file visibility set"
+      description: "POST-style visibility update for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageVisibilityRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_folder_delete:
+    post:
+      summary: "storage folder delete"
+      description: "Delete a managed Athena storage folder."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_folder_move:
+    post:
+      summary: "storage folder move"
+      description: "Move a managed Athena storage folder."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_list:
+    post:
+      summary: "storage object list"
+      description: "List raw S3-compatible objects through Athena storage."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_head:
+    post:
+      summary: "storage object head"
+      description: "Read object metadata with the raw S3-compatible storage binding."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_update:
+    post:
+      summary: "storage object update"
+      description: "Update object metadata or state with the raw storage binding."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_url:
+    post:
+      summary: "storage object url"
+      description: "Create a signed URL for a raw storage object."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_delete:
+    post:
+      summary: "storage object delete"
+      description: "Delete a raw storage object."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_upload_url:
+    post:
+      summary: "storage object upload url"
+      description: "Create an upload URL for a raw storage object."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_folder_create:
+    post:
+      summary: "storage object folder create"
+      description: "Create a folder in the raw S3-compatible object namespace."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_folder_delete:
+    post:
+      summary: "storage object folder delete"
+      description: "Delete a folder in the raw S3-compatible object namespace."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_folder_rename:
+    post:
+      summary: "storage object folder rename"
+      description: "Rename a folder in the raw S3-compatible object namespace."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_list:
+    post:
+      summary: "storage bucket list"
+      description: "List buckets visible to the Athena storage binding."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericOptionalStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_create:
+    post:
+      summary: "storage bucket create"
+      description: "Create a bucket through the Athena storage binding."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_delete:
+    post:
+      summary: "storage bucket delete"
+      description: "Delete a bucket through the Athena storage binding."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_cors_get:
+    post:
+      summary: "storage bucket cors get"
+      description: "Read bucket CORS configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_cors_set:
+    post:
+      summary: "storage bucket cors set"
+      description: "Set bucket CORS configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_cors_delete:
+    post:
+      summary: "storage bucket cors delete"
+      description: "Delete bucket CORS configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_api_keys:
     post:
-      summary: List Athena API keys
+      summary: "list api keys"
+      description: "Experimental admin tool. List Athena API keys using the admin API."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/create_api_key:
     post:
-      summary: Create an Athena API key
+      summary: "create api key"
+      description: "Experimental admin tool. Create an Athena API key. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateApiKeyToolRequest'
+              $ref: "#/components/schemas/CreateApiKeyToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/update_api_key:
     post:
-      summary: Update an Athena API key
+      summary: "update api key"
+      description: "Experimental admin tool. Update an existing Athena API key. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateApiKeyToolRequest'
+              $ref: "#/components/schemas/UpdateApiKeyToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/delete_api_key:
     post:
-      summary: Delete an Athena API key
+      summary: "delete api key"
+      description: "Experimental admin tool. Delete an Athena API key. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeleteApiKeyToolRequest'
+              $ref: "#/components/schemas/DeleteApiKeyToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_api_key_rights:
     post:
-      summary: List Athena API key rights
+      summary: "list api key rights"
+      description: "Experimental admin tool. List available Athena API key rights."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/create_api_key_right:
     post:
-      summary: Create an Athena API key right
+      summary: "create api key right"
+      description: "Experimental admin tool. Create an Athena API key right. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ApiKeyRightToolRequest'
+              $ref: "#/components/schemas/ApiKeyRightToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/update_api_key_right:
     post:
-      summary: Update an Athena API key right
+      summary: "update api key right"
+      description: "Experimental admin tool. Update an Athena API key right. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateApiKeyRightToolRequest'
+              $ref: "#/components/schemas/UpdateApiKeyRightToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/delete_api_key_right:
     post:
-      summary: Delete an Athena API key right
+      summary: "delete api key right"
+      description: "Experimental admin tool. Delete an Athena API key right. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeleteApiKeyToolRequest'
+              $ref: "#/components/schemas/DeleteApiKeyToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_api_key_config:
     post:
-      summary: Read Athena API key config
+      summary: "get api key config"
+      description: "Experimental admin tool. Read the global Athena API key enforcement configuration."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/update_api_key_config:
     post:
-      summary: Update Athena API key config
+      summary: "update api key config"
+      description: "Experimental admin tool. Update global Athena API key enforcement. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateApiKeyConfigToolRequest'
+              $ref: "#/components/schemas/UpdateApiKeyConfigToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_api_key_clients:
     post:
-      summary: List API key client overrides
+      summary: "list api key clients"
+      description: "Experimental admin tool. List per-client Athena API key enforcement overrides."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/save_api_key_client:
     post:
-      summary: Create or update an API key client override
+      summary: "save api key client"
+      description: "Experimental admin tool. Create or update a per-client Athena API key enforcement override. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SaveApiKeyClientToolRequest'
+              $ref: "#/components/schemas/SaveApiKeyClientToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/delete_api_key_client:
     post:
-      summary: Delete an API key client override
+      summary: "delete api key client"
+      description: "Experimental admin tool. Delete a per-client Athena API key enforcement override. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeleteApiKeyClientToolRequest'
+              $ref: "#/components/schemas/DeleteApiKeyClientToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_athena_clients_admin:
     post:
-      summary: List Athena clients in admin catalog
+      summary: "list athena clients admin"
+      description: "Experimental admin tool. List Athena clients from the database-backed admin catalog."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/create_athena_client:
     post:
-      summary: Create an Athena client
+      summary: "create athena client"
+      description: "Experimental admin tool. Create an Athena client in the admin catalog. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SaveAthenaClientToolRequest'
+              $ref: "#/components/schemas/SaveAthenaClientToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/update_athena_client:
     post:
-      summary: Update an Athena client
+      summary: "update athena client"
+      description: "Experimental admin tool. Update an Athena client in the admin catalog. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SaveAthenaClientToolRequest'
+              $ref: "#/components/schemas/SaveAthenaClientToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/delete_athena_client:
     post:
-      summary: Delete an Athena client
+      summary: "delete athena client"
+      description: "Experimental admin tool. Soft-delete an Athena client from the admin catalog. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeleteApiKeyClientToolRequest'
+              $ref: "#/components/schemas/DeleteApiKeyClientToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/freeze_athena_client:
     post:
-      summary: Freeze or unfreeze an Athena client
+      summary: "freeze athena client"
+      description: "Experimental admin tool. Freeze or unfreeze an Athena client. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FreezeAthenaClientToolRequest'
+              $ref: "#/components/schemas/FreezeAthenaClientToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_client_statistics:
     post:
-      summary: List Athena client statistics
+      summary: "list client statistics"
+      description: "Experimental admin tool. List aggregated Athena client statistics from gateway logs."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/refresh_client_statistics:
     post:
-      summary: Refresh Athena client statistics
+      summary: "refresh client statistics"
+      description: "Experimental admin tool. Rebuild Athena client statistics from gateway logs. Blocked when read_only mode is enabled."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_client_statistics:
     post:
-      summary: Get per-client Athena statistics
+      summary: "get client statistics"
+      description: "Experimental admin tool. Inspect per-client Athena statistics and touched tables."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeleteApiKeyClientToolRequest'
+              $ref: "#/components/schemas/DeleteApiKeyClientToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/toggle_supabase_ssl_enforcement:
     post:
-      summary: Toggle Supabase SSL enforcement
+      summary: "toggle supabase ssl enforcement"
+      description: "Experimental admin tool. Enable or disable Supabase SSL enforcement for a project. Blocked when read_only mode is enabled."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ToggleSupabaseSslEnforcementToolRequest'
+              $ref: "#/components/schemas/ToggleSupabaseSslEnforcementToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_router_registry:
     post:
-      summary: List Athena router registry entries
+      summary: "List router registry entries"
+      description: "List Athena router registry entries."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/list_registry_entries:
     post:
-      summary: List Athena registry entries
+      summary: "List registry entries"
+      description: "List API registry entries from Athena."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_registry_entry:
     post:
-      summary: Get an Athena registry entry by ID
+      summary: "Get a registry entry"
+      description: "Fetch a specific API registry entry by ID."
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GetRegistryEntryToolRequest'
+              $ref: "#/components/schemas/GetRegistryEntryToolRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_metrics:
     post:
-      summary: Fetch Athena metrics
+      summary: "Fetch metrics"
+      description: "Fetch Athena's Prometheus metrics payload."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_embedded_openapi:
     post:
-      summary: Download Athena embedded OpenAPI
+      summary: "Download embedded OpenAPI"
+      description: "Download Athena's embedded OpenAPI YAML document."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
   /tools/get_websocket_info:
     post:
-      summary: Read Athena websocket contract metadata
+      summary: "Read websocket gateway metadata"
+      description: "Read Athena's websocket gateway contract metadata."
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmptyRequest'
+              $ref: "#/components/schemas/EmptyRequest"
       responses:
-        '200':
-          description: Tool result payload
+        200:
+          description: "Tool result payload"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ToolResult'
+                $ref: "#/components/schemas/ToolResult"
 components:
   schemas:
     EmptyRequest:
       type: object
-      description: Tool that does not accept arguments
-      properties: {}
+      description: "Tool request with no required arguments."
+      properties:
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required: []
     ListMigrationsRequest:
       type: object
       properties:
         table_name:
           type: string
-          description: Migrations table name (defaults to 'schema_migrations')
+          description: "Migrations table name (defaults to 'schema_migrations')"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required: []
     ApplyMigrationRequest:
       type: object
       properties:
         sql:
           type: string
-          description: SQL migration to execute
+          description: "SQL migration to execute"
         name:
           type: string
-          description: Optional migration name or label
+          description: "Optional migration name or label"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - sql
+        - sql
     ExecuteSqlRequest:
       type: object
       properties:
         query:
           type: string
-          description: Raw SQL query to execute
+          description: "Raw SQL query to execute"
         driver:
           type: string
-          enum: [ athena, postgresql, supabase ]
-          description: Driver to use (defaults to 'postgresql')
+          enum:
+            - athena
+            - postgresql
+            - supabase
+          description: "Driver to use (defaults to standard Athena query endpoint)"
         db_name:
           type: string
-          description: Optional database name for /query/sql
+          description: "Database name (used by /query/sql endpoint)"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - query
+        - query
     GetLogsRequest:
       type: object
       properties:
         table_name:
           type: string
-          description: Logs table name (defaults to 'logs')
+          description: "Logs table name (defaults to 'logs')"
         limit:
           type: integer
           minimum: 1
-          description: Maximum number of log rows to return (defaults to 100)
+          description: "Maximum number of log rows to return (defaults to 100)"
         level:
           type: string
-          pattern: '^[a-zA-Z0-9_-]+$'
-          description: Filter by log level (e.g. 'error', 'warn', 'info')
+          pattern: "^[a-zA-Z0-9_-]+$"
+          description: "Filter by log level (e.g. 'error', 'warn', 'info')"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required: []
     GetColumnsRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name (optionally schema-qualified) to describe
+          description: "Table name (optionally schema-qualified) to describe"
         schema:
           type: string
-          description: Optional schema name when the table name is not schema-qualified
+          description: "Optional schema name when the table name is not schema-qualified"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
+        - table
     ListTableMetadataRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name (optionally schema-qualified)
+          description: "Table name (optionally schema-qualified)"
         schema:
           type: string
-          description: Optional schema name when the table name is not schema-qualified
+          description: "Optional schema name when the table name is not schema-qualified"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
+        - table
     ListSchemasRequest:
       type: object
       properties:
         include_system:
           type: boolean
-          description: Include pg_catalog and information_schema
+          description: "Include pg_catalog and information_schema schemas"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required: []
     ListViewsRequest:
       type: object
       properties:
         schema:
           type: string
-          description: Schema to limit view lookup
+          description: "Schema to limit the view lookup to"
         include_materialized:
           type: boolean
-          description: Include materialized views defined in pg_matviews
+          description: "Include materialized views (when supported by schema API)"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required: []
     GetRowByEqColumnRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name to query (optionally schema-qualified)
+          description: "Table name to query (optionally schema-qualified)"
         column:
           type: string
-          description: Column name to match against
+          description: "Column name to match against"
         value:
           oneOf:
-          - type: string
-          - type: number
-          - type: boolean
-          description: Value to compare (converted to string for Athena)
+            - type: string
+            - type: number
+            - type: boolean
+          description: "Value to compare (converted to string for Athena)"
         schema:
           type: string
-          description: Optional schema to override the table name
+          description: "Optional schema to override the table name"
         limit:
           type: integer
           minimum: 1
-          description: Maximum number of rows to return (defaults to 100)
+          description: "Maximum number of rows to return (defaults to 100)"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
-      - column
-      - value
+        - table
+        - column
+        - value
     ListForeignKeysRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name (optionally schema-qualified)
+          description: "Table name (optionally schema-qualified)"
         schema:
           type: string
-          description: Optional schema when table name is not schema-qualified
+          description: "Optional schema when table name is not schema-qualified"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
+        - table
     GetTableSampleRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name (optionally schema-qualified)
+          description: "Table name (optionally schema-qualified)"
         schema:
           type: string
-          description: Optional schema when table name is not schema-qualified
+          description: "Optional schema when table name is not schema-qualified"
         limit:
           type: integer
           minimum: 1
-          description: Number of rows to sample (defaults to 10)
+          description: "Number of rows to sample (defaults to 10)"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
+        - table
     ListIndexesRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name (optionally schema-qualified)
+          description: "Table name (optionally schema-qualified)"
         schema:
           type: string
-          description: Optional schema when table name is not schema-qualified
+          description: "Optional schema when table name is not schema-qualified"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
+        - table
     SearchColumnsRequest:
       type: object
       properties:
         pattern:
           type: string
-          description: Column or table name pattern (SQL LIKE, use % for wildcard)
+          description: "Column or table name pattern (SQL LIKE, use % for wildcard)"
         schema:
           type: string
-          description: Optional schema to limit search
+          description: "Optional schema to limit search"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - pattern
+        - pattern
     GetRowByIdRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name (optionally schema-qualified)
+          description: "Table name (optionally schema-qualified)"
         id:
           oneOf:
-          - type: string
-          - type: number
-          description: Primary key value (typically id)
+            - type: string
+            - type: number
+          description: "Primary key value (typically id)"
         id_column:
           type: string
-          description: Primary key column name (defaults to 'id')
+          description: "Primary key column name (defaults to 'id')"
         schema:
           type: string
-          description: Optional schema when table name is not schema-qualified
+          description: "Optional schema when table name is not schema-qualified"
         limit:
           type: integer
           minimum: 1
-          description: Maximum rows to return (defaults to 100)
+          description: "Maximum rows to return (defaults to 100)"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
-      - id
+        - table
+        - id
     ListAllTableMetadataRequest:
       type: object
       properties:
         schema:
           type: string
-          description: Optional schema to limit to (default all user schemas)
+          description: "Optional schema to limit to (default: all user schemas)"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required: []
     InsertRowRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name (optionally schema-qualified)
+          description: "Table name (optionally schema-qualified)"
         data:
           type: object
           additionalProperties:
             oneOf:
-            - type: string
-            - type: number
-            - type: boolean
-            - type: "null"
-          description: Row data as key-value pairs
+              - type: string
+              - type: number
+              - type: boolean
+              - type: "null"
+          description: "Row data as key-value pairs"
         schema:
           type: string
-          description: Optional schema when table name is not schema-qualified
+          description: "Optional schema when table name is not schema-qualified"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
-      - data
+        - table
+        - data
     DeleteRowRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name (optionally schema-qualified)
+          description: "Table name (optionally schema-qualified)"
         resource_id:
           type: string
-          description: Primary key value of the row to delete
+          description: "Primary key value of the row to delete"
         schema:
           type: string
-          description: Optional schema when table name is not schema-qualified
+          description: "Optional schema when table name is not schema-qualified"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
-      - resource_id
+        - table
+        - resource_id
     UpdateRowRequest:
       type: object
       properties:
         table:
           type: string
-          description: Table name (optionally schema-qualified)
+          description: "Table name (optionally schema-qualified)"
         set:
           type: object
           additionalProperties:
             oneOf:
+              - type: string
+              - type: number
+              - type: boolean
+              - type: "null"
+          description: "Column-value pairs to set"
+        where_column:
+          type: string
+          description: "Column to match in WHERE clause"
+        where_value:
+          oneOf:
             - type: string
             - type: number
             - type: boolean
-            - type: "null"
-          description: Column-value pairs to set
-        where_column:
-          type: string
-          description: Column to match in WHERE clause
-        where_value:
-          oneOf:
-          - type: string
-          - type: number
-          - type: boolean
-          description: Value to match (converted to string)
+          description: "Value to match (converted to string)"
         schema:
           type: string
-          description: Optional schema when table name is not schema-qualified
+          description: "Optional schema when table name is not schema-qualified"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table
-      - set
-      - where_column
-      - where_value
+        - table
+        - set
+        - where_column
+        - where_value
+    ManagementColumn:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Column name"
+        data_type:
+          type: string
+          description: "PostgreSQL data type"
+        nullable:
+          type: boolean
+          description: "Whether the column is nullable"
+        default_expression:
+          type: string
+          description: "Optional SQL default expression"
+      required:
+        - name
+        - data_type
     CreateTableToolRequest:
       type: object
       properties:
         table_name:
           type: string
-          description: Table name to create
+          description: "Table name to create"
         schema_name:
           type: string
-          description: Schema name (defaults to public)
+          description: "Schema name (defaults to public)"
         columns:
           type: array
-          description: Optional column definitions
+          description: "Optional column definitions"
           items:
-            type: object
+            $ref: "#/components/schemas/ManagementColumn"
         if_not_exists:
           type: boolean
-          description: Compatibility flag accepted by Athena
+          description: "Compatibility flag accepted by Athena"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table_name
+        - table_name
     EditTableToolRequest:
       type: object
       properties:
         table_name:
           type: string
+          description: "Target table name"
         schema_name:
           type: string
+          description: "Schema name (defaults to public)"
         operations:
           type: array
+          description: "Ordered table alteration operations"
           items:
             type: object
+            additionalProperties: true
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table_name
-      - operations
+        - table_name
+        - operations
     DropTableToolRequest:
       type: object
       properties:
         table_name:
           type: string
+          description: "Target table name"
         schema_name:
           type: string
+          description: "Schema name (defaults to public)"
         cascade:
           type: boolean
+          description: "Whether to cascade the drop"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table_name
+        - table_name
     DropColumnToolRequest:
       type: object
       properties:
         table_name:
           type: string
+          description: "Target table name"
         column_name:
           type: string
+          description: "Column name to drop"
         schema_name:
           type: string
+          description: "Schema name (defaults to public)"
         cascade:
           type: boolean
+          description: "Whether to cascade the drop"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table_name
-      - column_name
+        - table_name
+        - column_name
     CreateIndexToolRequest:
       type: object
       properties:
         table_name:
           type: string
+          description: "Target table name"
         columns:
           type: array
           items:
             type: string
+          description: "Columns included in the index"
         schema_name:
           type: string
+          description: "Schema name (defaults to public)"
         index_name:
           type: string
+          description: "Optional explicit index name"
         unique:
           type: boolean
+          description: "Whether the index is unique"
         method:
           type: string
+          description: "Index access method (defaults to btree)"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - table_name
-      - columns
+        - table_name
+        - columns
     DropIndexToolRequest:
       type: object
       properties:
         index_name:
           type: string
+          description: "Index name to drop"
         schema_name:
           type: string
+          description: "Schema name (defaults to public)"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - index_name
+        - index_name
     RunPipelineRequest:
       type: object
       properties:
         pipeline:
           type: string
+          description: "Optional prebuilt pipeline name from Athena config"
         source:
           type: object
+          description: "Pipeline source config"
+          additionalProperties: true
         transform:
           type: object
+          description: "Pipeline transform config"
+          additionalProperties: true
         sink:
           type: object
+          description: "Pipeline sink config"
+          additionalProperties: true
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required: []
     CreateApiKeyToolRequest:
       type: object
       properties:
         name:
           type: string
+          description: "Human-readable API key name"
         description:
           type: string
+          description: "Optional description"
         client_name:
           type: string
+          description: "Optional client binding for this key"
         expires_at:
           type: string
+          description: "Optional ISO date-time expiry"
         rights:
           type: array
           items:
             type: string
+          description: "Rights to grant"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - name
+        - name
     UpdateApiKeyToolRequest:
       type: object
       properties:
         id:
           type: string
+          description: "API key UUID"
         name:
           type: string
         description:
@@ -1342,64 +2085,94 @@ components:
           type: array
           items:
             type: string
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - id
+        - id
     DeleteApiKeyToolRequest:
       type: object
       properties:
         id:
           type: string
+          description: "API key UUID"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - id
+        - id
     ApiKeyRightToolRequest:
       type: object
       properties:
         name:
           type: string
+          description: "Right name"
         description:
           type: string
+          description: "Optional description"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - name
+        - name
     UpdateApiKeyRightToolRequest:
       type: object
       properties:
         id:
           type: string
+          description: "API key right UUID"
         name:
           type: string
         description:
           type: string
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - id
+        - id
     UpdateApiKeyConfigToolRequest:
       type: object
       properties:
         enforce_api_keys:
           type: boolean
+          description: "Whether API keys are globally enforced"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - enforce_api_keys
+        - enforce_api_keys
     SaveApiKeyClientToolRequest:
       type: object
       properties:
         client_name:
           type: string
+          description: "Athena client name"
         enforce_api_keys:
           type: boolean
+          description: "Whether API keys are enforced for this client"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - client_name
-      - enforce_api_keys
+        - client_name
+        - enforce_api_keys
     DeleteApiKeyClientToolRequest:
       type: object
       properties:
         client_name:
           type: string
+          description: "Athena client name"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - client_name
+        - client_name
     SaveAthenaClientToolRequest:
       type: object
       properties:
         client_name:
           type: string
+          description: "Athena client name"
         description:
           type: string
         pg_uri:
@@ -1408,53 +2181,179 @@ components:
           type: string
         is_active:
           type: boolean
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - client_name
+        - client_name
     FreezeAthenaClientToolRequest:
       type: object
       properties:
         client_name:
           type: string
+          description: "Athena client name"
         is_frozen:
           type: boolean
-      required:
-      - client_name
-      - is_frozen
-    ToggleSupabaseSslEnforcementToolRequest:
-      type: object
-      properties:
-        enabled:
-          type: boolean
-        access_token:
+          description: "Whether the client should be frozen"
+        client:
           type: string
-        project_ref:
-          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - enabled
+        - client_name
+        - is_frozen
     GetRegistryEntryToolRequest:
       type: object
       properties:
         api_registry_id:
           type: string
+          description: "Registry row identifier"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
-      - api_registry_id
+        - api_registry_id
+    ToggleSupabaseSslEnforcementToolRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: "Whether Supabase SSL enforcement should be enabled"
+        access_token:
+          type: string
+          description: "Optional override for SUPABASE_ACCESS_TOKEN"
+        project_ref:
+          type: string
+          description: "Optional override for PROJECT_REF"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - enabled
+    StorageCatalogIdRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Storage catalog ID"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - id
+    StorageFileIdRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: "Managed storage file ID"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - file_id
+    StorageFileUrlRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: "Managed storage file ID"
+        query:
+          type: object
+          additionalProperties: true
+          description: "Optional GetStorageFileUrlQuery payload"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - file_id
+    StorageVisibilityRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: "Managed storage file ID"
+        input:
+          type: object
+          additionalProperties: true
+          description: "SetStorageFileVisibilityRequest payload"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - file_id
+        - input
+    GenericStorageInputRequest:
+      type: object
+      properties:
+        input:
+          type: object
+          additionalProperties: true
+          description: "Opaque request payload forwarded to Athena storage"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - input
+    GenericOptionalStorageInputRequest:
+      type: object
+      properties:
+        input:
+          type: object
+          additionalProperties: true
+          description: "Optional opaque request payload forwarded to Athena storage"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required: []
+    StorageCatalogUpdateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Storage catalog ID"
+        input:
+          type: object
+          additionalProperties: true
+          description: "UpdateStorageCatalogRequest payload"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - id
+        - input
+    StorageFileUpdateRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: "Managed storage file ID"
+        input:
+          type: object
+          additionalProperties: true
+          description: "UpdateStorageFileRequest payload"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - file_id
+        - input
     ToolResult:
       type: object
       properties:
         content:
           type: array
-          description: Content messages emitted by the tool (text/images/resources)
+          description: "Content messages emitted by the tool (text/images/resources)"
           items:
-            $ref: '#/components/schemas/ToolContent'
+            $ref: "#/components/schemas/ToolContent"
         isError:
           type: boolean
-          description: True when the tool execution failed
+          description: "True when the tool execution failed"
     ToolContent:
       type: object
       properties:
         type:
           type: string
-          description: Content type (e.g. text, image, resource)
+          description: "Content type (e.g. text, image, resource)"
         text:
           type: string
-          description: Textual result (available when type is text)
+          description: "Textual result (available when type is text)"
