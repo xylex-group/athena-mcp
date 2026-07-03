@@ -2,7 +2,7 @@
   "tools": [
     {
       "name": "list_tables",
-      "description": "List all tables available in the connected PostgreSQL database",
+      "description": "List all tables available in the connected PostgreSQL database. Primary schema discovery tool.",
       "inputSchema": {
         "$ref": "#/definitions/EmptyRequest"
       }
@@ -30,7 +30,7 @@
     },
     {
       "name": "execute_sql",
-      "description": "Execute a raw SQL query against the connected database. Write operations are blocked when read_only mode is enabled.",
+      "description": "Execute a raw SQL query. Write operations (and queries containing write keywords) are blocked when READ_ONLY mode is enabled. Supports optional driver selection.",
       "inputSchema": {
         "$ref": "#/definitions/ExecuteSqlRequest"
       }
@@ -1087,7 +1087,7 @@
     },
     {
       "name": "sdk_db_select",
-      "description": "SDK-driven select via db.from().select().findMany() with filters.",
+      "description": "Powerful select using the official SDK builder (db.from(table).select(...).eq(...).findMany()). Excellent for relations and typed queries.",
       "inputSchema": {
         "$ref": "#/definitions/SdkSelectRequest"
       }

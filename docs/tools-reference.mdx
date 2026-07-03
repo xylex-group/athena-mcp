@@ -1,0 +1,2363 @@
+---
+title: MCP Tools Reference
+description: Complete reference for every tool exposed by the Athena MCP server. Documents all 169 tools with descriptions, inputs, read-only behavior, and backend mappings.
+---
+
+# Athena MCP Tools - Complete Reference
+
+**Package:** `@xylex-group/athena-mcp`
+**Total Tools:** 169
+
+This page provides **documentation for each and every tool**.
+
+## General Behavior
+- Optional `client` field when multiple `ATHENA_AVAILABLE_CLIENTS` configured.
+- Read-only mode blocks all mutating operations.
+- Full schemas in the package's `mcp-tools.json` and `athena-mcp-openapi.yaml`.
+
+## Schema & Data Discovery
+
+### `list_tables`
+
+List all tables available in the connected PostgreSQL database. Primary schema discovery tool.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** /schema/*
+
+---
+
+### `list_schemas`
+
+List database schemas visible to the current Athena client
+
+**Inputs:**
+- `include_system` (boolean, optional): Include pg_catalog and information_schema schemas
+
+**Read-only safe:** Yes
+
+**Backend:** /schema/*
+
+---
+
+### `list_extensions`
+
+List all installed PostgreSQL extensions. May return empty if the gateway does not expose extension metadata.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `list_views`
+
+List visible views (and optionally materialized views). Uses Athena schema API.
+
+**Inputs:**
+- `schema` (string, optional): Schema to limit the view lookup to
+- `include_materialized` (boolean, optional): Include materialized views (when supported by schema API)
+
+**Read-only safe:** Yes
+
+**Backend:** /schema/*
+
+---
+
+### `get_columns_of_table`
+
+Describe columns for a table using Athena's schema API
+
+**Inputs:**
+- `table` (string, required): Table name (optionally schema-qualified) to describe
+- `schema` (string, optional): Optional schema name when the table name is not schema-qualified
+
+**Read-only safe:** Yes
+
+**Backend:** /schema/*
+
+---
+
+### `list_table_metadata`
+
+Return the full metadata for a table: schema name, table name, and each column's name, type, default value, and nullable flag
+
+**Inputs:**
+- `table` (string, required): Table name (optionally schema-qualified)
+- `schema` (string, optional): Optional schema name when the table name is not schema-qualified
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `list_all_table_metadata`
+
+Return metadata for all tables in one call: schema, name, columns, types, defaults, nullable. Uses Athena schema API.
+
+**Inputs:**
+- `schema` (string, optional): Optional schema to limit to (default: all user schemas)
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `list_foreign_keys`
+
+List primary keys, foreign keys, and unique constraints for a table. Essential for understanding relationships and correct joins.
+
+**Inputs:**
+- `table` (string, required): Table name (optionally schema-qualified)
+- `schema` (string, optional): Optional schema when table name is not schema-qualified
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `list_indexes`
+
+List index definitions for a table. Helps with performance and query design.
+
+**Inputs:**
+- `table` (string, required): Table name (optionally schema-qualified)
+- `schema` (string, optional): Optional schema when table name is not schema-qualified
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `search_columns`
+
+Find tables and columns by name pattern. Speeds up schema discovery.
+
+**Inputs:**
+- `pattern` (string, required): Column or table name pattern (SQL LIKE, use % for wildcard)
+- `schema` (string, optional): Optional schema to limit search
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_table_sample`
+
+Sample rows from a table to understand its data shape. Quick alternative to writing SQL.
+
+**Inputs:**
+- `table` (string, required): Table name (optionally schema-qualified)
+- `schema` (string, optional): Optional schema when table name is not schema-qualified
+- `limit` (integer, optional): Number of rows to sample (defaults to 10)
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+## Row Access & Basic CRUD
+
+### `get_row_by_id`
+
+Fetch rows by primary key column value. Simplifies the common fetch-by-id use case.
+
+**Inputs:**
+- `table` (string, required): Table name (optionally schema-qualified)
+- `id` (string|number|boolean|null, required): Primary key value (typically id)
+- `id_column` (string, optional): Primary key column name (defaults to 'id')
+- `schema` (string, optional): Optional schema when table name is not schema-qualified
+- `limit` (integer, optional): Maximum rows to return (defaults to 100)
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_row_by_eq_column_of_table`
+
+Fetch rows from a table where `column = value` using Athena's fetch endpoint
+
+**Inputs:**
+- `table` (string, required): Table name to query (optionally schema-qualified)
+- `column` (string, required): Column name to match against
+- `value` (string|number|boolean|null, required): Value to compare (converted to string for Athena)
+- `schema` (string, optional): Optional schema to override the table name
+- `limit` (integer, optional): Maximum number of rows to return (defaults to 100)
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `insert_row`
+
+Insert a row into a table. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `table` (string, required): Table name (optionally schema-qualified)
+- `data` (object, required): Row data as key-value pairs
+- `schema` (string, optional): Optional schema when table name is not schema-qualified
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /gateway/* or /query/*
+
+---
+
+### `update_row`
+
+Update rows matching a condition. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `table` (string, required): Table name (optionally schema-qualified)
+- `set` (object, required): Column-value pairs to set
+- `where_column` (string, required): Column to match in WHERE clause
+- `where_value` (string|number|boolean|null, required): Value to match (converted to string)
+- `schema` (string, optional): Optional schema when table name is not schema-qualified
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /gateway/* or /query/*
+
+---
+
+### `delete_row`
+
+Delete a row by primary key (resource_id). Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `table` (string, required): Table name (optionally schema-qualified)
+- `resource_id` (string, required): Primary key value of the row to delete
+- `schema` (string, optional): Optional schema when table name is not schema-qualified
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /gateway/* or /query/*
+
+---
+
+## SQL, Migrations, Logs & Pipelines
+
+### `execute_sql`
+
+Execute a raw SQL query. Write operations (and queries containing write keywords) are blocked when READ_ONLY mode is enabled. Supports optional driver selection.
+
+**Inputs:**
+- `query` (string, required): Raw SQL query to execute
+- `driver` (string, optional): Driver to use (defaults to standard Athena query endpoint)
+- `db_name` (string, optional): Database name (used by /query/sql endpoint)
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /gateway/* or /query/*
+
+---
+
+### `list_migrations`
+
+List applied database migrations
+
+**Inputs:**
+- `table_name` (string, optional): Migrations table name (defaults to 'schema_migrations')
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `apply_migration`
+
+Apply a SQL migration against the connected database. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `sql` (string, required): SQL migration to execute
+- `name` (string, optional): Optional migration name or label
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_logs`
+
+Retrieve recent database or application logs
+
+**Inputs:**
+- `table_name` (string, optional): Logs table name (defaults to 'logs')
+- `limit` (integer, optional): Maximum number of log rows to return (defaults to 100)
+- `level` (string, optional): Filter by log level (e.g. 'error', 'warn', 'info')
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `run_pipeline`
+
+Run a config-driven Athena pipeline (source -> transform -> sink).
+
+**Inputs:**
+- `pipeline` (string, optional): Optional prebuilt pipeline name from Athena config
+- `source` (object, optional): Pipeline source config
+- `transform` (object, optional): Pipeline transform config
+- `sink` (object, optional): Pipeline sink config
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+## Health, Cluster & Infrastructure
+
+### `ping`
+
+Run the Athena health check endpoint.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_api_root`
+
+Fetch Athena API root metadata, including the advertised route list.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_cluster_health`
+
+Check Athena mirror reachability, latency, throughput, and version metadata.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_management_capabilities`
+
+List Athena management API capabilities and required rights for the current client.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Direct gateway or /management routes
+
+---
+
+### `list_available_clients`
+
+List the MCP server's configured Athena client allowlist and, when available, the remote Athena client catalog response.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+## Table & Index Management (DDL)
+
+### `create_table`
+
+Create a managed table through Athena's management API. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `table_name` (string, required): Table name to create
+- `schema_name` (string, optional): Schema name (defaults to public)
+- `columns` (array, optional): Optional column definitions
+- `if_not_exists` (boolean, optional): Compatibility flag accepted by Athena
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `edit_table`
+
+Apply safe additive ALTER TABLE operations through Athena's management API. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `table_name` (string, required): Target table name
+- `schema_name` (string, optional): Schema name (defaults to public)
+- `operations` (array, required): Ordered table alteration operations
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `drop_table`
+
+Drop a managed table through Athena's management API. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `table_name` (string, required): Target table name
+- `schema_name` (string, optional): Schema name (defaults to public)
+- `cascade` (boolean, optional): Whether to cascade the drop
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `drop_column`
+
+Drop a managed table column through Athena's management API. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `table_name` (string, required): Target table name
+- `column_name` (string, required): Column name to drop
+- `schema_name` (string, optional): Schema name (defaults to public)
+- `cascade` (boolean, optional): Whether to cascade the drop
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `create_index`
+
+Create an index through Athena's management API. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `table_name` (string, required): Target table name
+- `columns` (array, required): Columns included in the index
+- `schema_name` (string, optional): Schema name (defaults to public)
+- `index_name` (string, optional): Optional explicit index name
+- `unique` (boolean, optional): Whether the index is unique
+- `method` (string, optional): Index access method (defaults to btree)
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `drop_index`
+
+Drop an index through Athena's management API. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `index_name` (string, required): Index name to drop
+- `schema_name` (string, optional): Schema name (defaults to public)
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+## SDK Surfaces (Auth, Chat, DB)
+
+### `auth_get_session`
+
+Get current session using the Athena auth SDK binding.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `auth_get_user`
+
+Get current user using the Athena auth SDK binding.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `auth_sign_out`
+
+Sign out the current session using the Athena auth SDK.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `auth_refresh_token`
+
+Refresh access token using a refresh token via auth SDK.
+
+**Inputs:**
+- `refresh_token` (string, required): Refresh token
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `auth_sign_up`
+
+Sign up a new user via Athena auth SDK. Blocked in read_only.
+
+**Inputs:**
+- `email` (string, required): User email
+- `password` (string, required): Password (min 8)
+- `data` (object, optional): Optional metadata
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `auth_sign_in`
+
+Sign in with email/password via Athena auth SDK. Blocked in read_only.
+
+**Inputs:**
+- `email` (string, required): 
+- `password` (string, required): 
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `auth_forgot_password`
+
+Trigger forgot password flow. Blocked in read_only.
+
+**Inputs:**
+- `email` (string, required): 
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `auth_reset_password`
+
+Reset password with token. Blocked in read_only.
+
+**Inputs:**
+- `token` (string, required): 
+- `new_password` (string, required): 
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `auth_admin_list_users`
+
+Admin list users via auth admin surface (may require elevated rights).
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `auth_admin_create_user`
+
+Admin create user via auth. Blocked in read_only.
+
+**Inputs:**
+- `email` (string, required): 
+- `password` (string, optional): 
+- `email_confirm` (boolean, optional): 
+- `data` (object, optional): 
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Auth SDK module
+
+---
+
+### `chat_list_rooms`
+
+List chat rooms via Athena chat SDK module.
+
+**Inputs:**
+- `limit` (integer, optional): 
+- `include_archived` (boolean, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Chat SDK module
+
+---
+
+### `chat_create_room`
+
+Create a chat room. Blocked in read_only.
+
+**Inputs:**
+- `slug` (string, required): 
+- `name` (string, optional): 
+- `metadata` (object, optional): 
+- `is_private` (boolean, optional): 
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Chat SDK module
+
+---
+
+### `chat_get_room`
+
+Get a specific chat room.
+
+**Inputs:**
+- `room_id` (string, required): 
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Chat SDK module
+
+---
+
+### `chat_archive_room`
+
+Archive a chat room. Blocked in read_only.
+
+**Inputs:**
+- `room_id` (string, required): 
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Chat SDK module
+
+---
+
+### `chat_list_messages`
+
+List messages for a room.
+
+**Inputs:**
+- `room_id` (string, required): 
+- `limit` (integer, optional): 
+- `before_id` (string, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Chat SDK module
+
+---
+
+### `chat_send_message`
+
+Send a message. Blocked in read_only.
+
+**Inputs:**
+- `room_id` (string, required): 
+- `content` (string, required): 
+- `metadata` (object, optional): 
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Chat SDK module
+
+---
+
+### `chat_get_realtime_info`
+
+Get chat realtime connection metadata via SDK.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Chat SDK module
+
+---
+
+### `chat_search_messages`
+
+Search chat messages.
+
+**Inputs:**
+- `query` (string, required): 
+- `room_id` (string, optional): 
+- `limit` (integer, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Chat SDK module
+
+---
+
+### `sdk_db_select`
+
+Powerful select using the official SDK builder (db.from(table).select(...).eq(...).findMany()). Excellent for relations and typed queries.
+
+**Inputs:**
+- `table` (string, required): 
+- `select` (string, optional): 
+- `filters` (object, optional): 
+- `limit` (integer, optional): 
+- `offset` (integer, optional): 
+- `order` (string, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** SDK db / request builders
+
+---
+
+### `sdk_db_insert`
+
+SDK insert/upsert via db module. Blocked in read_only.
+
+**Inputs:**
+- `table` (string, required): 
+- `data` (string|number|boolean|null, required): 
+- `upsert` (boolean, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** SDK db / request builders
+
+---
+
+### `sdk_db_update`
+
+SDK update via db.from().update(). Blocked in read_only.
+
+**Inputs:**
+- `table` (string, required): 
+- `set` (object, required): 
+- `filters` (object, required): 
+
+**Read-only safe:** Yes
+
+**Backend:** SDK db / request builders
+
+---
+
+### `sdk_db_delete`
+
+SDK delete via db module. Blocked in read_only.
+
+**Inputs:**
+- `table` (string, required): 
+- `filters` (object, required): 
+
+**Read-only safe:** Yes
+
+**Backend:** SDK db / request builders
+
+---
+
+### `sdk_db_rpc`
+
+Call Postgres function/RPC via SDK db.rpc().
+
+**Inputs:**
+- `function_name` (string, required): 
+- `args` (object, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** SDK db / request builders
+
+---
+
+### `sdk_db_query`
+
+Raw query via SDK client.
+
+**Inputs:**
+- `query` (string, required): 
+- `params` (array, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** SDK db / request builders
+
+---
+
+### `sdk_verify_connection`
+
+Verify the SDK client connection.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** SDK db / request builders
+
+---
+
+## Direct Gateway & Management Routes
+
+### `gateway_fetch`
+
+Direct low-level gateway fetch operation.
+
+**Inputs:**
+- `table_name` (string, required): 
+- `select` (string, optional): 
+- `where` (object, optional): 
+- `limit` (integer, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** Direct gateway or /management routes
+
+---
+
+### `gateway_insert`
+
+Direct gateway insert. Blocked in read_only.
+
+**Inputs:**
+- `table_name` (string, required): 
+- `insert_body` (string|number|boolean|null, required): 
+
+**Read-only safe:** Yes
+
+**Backend:** Direct gateway or /management routes
+
+---
+
+### `gateway_rpc`
+
+Direct /gateway/rpc/{fn} call.
+
+**Inputs:**
+- `function_name` (string, required): 
+- `args` (object, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** Direct gateway or /management routes
+
+---
+
+### `gateway_sql`
+
+Direct SQL execution via gateway sql surface (write guarded).
+
+**Inputs:**
+- `sql` (string, required): 
+- `driver` (string, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** Direct gateway or /management routes
+
+---
+
+### `list_views_management`
+
+List views using management surface.
+
+**Inputs:**
+- `schema` (string, optional): 
+
+**Read-only safe:** Yes
+
+**Backend:** Direct gateway or /management routes
+
+---
+
+### `list_management_functions`
+
+List management functions surface.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Direct gateway or /management routes
+
+---
+
+### `management_capabilities`
+
+Management capabilities (alias).
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Direct gateway or /management routes
+
+---
+
+## Storage Tools
+
+### `storage_credentials_list`
+
+List managed Athena storage credentials using the storage SDK binding.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_catalog_list`
+
+List managed Athena storage catalogs.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_catalog_create`
+
+Create a managed Athena storage catalog.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_catalog_update`
+
+Update a managed Athena storage catalog.
+
+**Inputs:**
+- `id` (string, required): Storage catalog ID
+- `input` (object, required): UpdateStorageCatalogRequest payload
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_catalog_delete`
+
+Delete a managed Athena storage catalog.
+
+**Inputs:**
+- `id` (string, required): Storage catalog ID
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_upload`
+
+Create an upload URL for a managed Athena storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_upload_many`
+
+Create multiple upload URLs for managed Athena storage files in one call.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_confirm_upload`
+
+Confirm that a managed Athena storage upload completed and persist any final metadata.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `input` (object, optional): Optional opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_upload_binary`
+
+Upload small file content directly through MCP using either base64 or UTF-8 text.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `body_base64` (string, optional): Base64-encoded file contents. Provide this or body_text.
+- `body_text` (string, optional): UTF-8 file contents. Provide this or body_base64.
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_list`
+
+List managed Athena storage files.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_search`
+
+Search managed Athena storage files.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_get`
+
+Get managed Athena storage file metadata.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_update`
+
+Update managed Athena storage file metadata.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `input` (object, required): UpdateStorageFileRequest payload
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_update_many`
+
+Update many managed Athena storage files in one call.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_delete`
+
+Delete a managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_delete_many`
+
+Delete many managed Athena storage files in one call.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_restore`
+
+Restore a soft-deleted managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_purge`
+
+Purge a managed Athena storage file permanently.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_copy`
+
+Copy a managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_url`
+
+Generate a signed URL for a managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `query` (object, optional): Optional GetStorageFileUrlQuery payload
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_public_url`
+
+Generate the public URL for a managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_proxy_url`
+
+Generate the proxy URL for a managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `query` (object, optional): Optional GetStorageFileUrlQuery payload
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_proxy`
+
+Proxy a managed Athena storage file and return response metadata plus text when the proxied content is text-based.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `query` (object, optional): Optional GetStorageFileUrlQuery payload
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_visibility_update`
+
+PATCH-style visibility update for a managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `input` (object, required): SetStorageFileVisibilityRequest payload
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_visibility_set`
+
+POST-style visibility update for a managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `input` (object, required): SetStorageFileVisibilityRequest payload
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_visibility_set_many`
+
+Update visibility for many managed Athena storage files in one call.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_versions`
+
+List managed Athena storage file versions.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_version_restore`
+
+Restore a specific managed Athena storage file version.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `version_id` (string, required): Managed storage file version ID
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_version_delete`
+
+Delete a specific managed Athena storage file version.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `version_id` (string, required): Managed storage file version ID
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_retention_get`
+
+Read retention settings for a managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `query` (object, optional): Optional StorageFileRetentionRequest subset containing version_id
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_file_retention_set`
+
+Set retention settings for a managed Athena storage file.
+
+**Inputs:**
+- `file_id` (string, required): Managed storage file ID
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_folder_list`
+
+List managed Athena storage folders under a prefix.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_folder_tree`
+
+Return the managed Athena storage folder tree under a prefix.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_folder_delete`
+
+Delete a managed Athena storage folder.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_folder_move`
+
+Move a managed Athena storage folder.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_permission_list`
+
+List file-level permissions for a managed Athena storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_permission_grant`
+
+Grant a permission for a managed Athena storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_permission_revoke`
+
+Revoke a permission for a managed Athena storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_permission_check`
+
+Check a permission for a managed Athena storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_list`
+
+List raw S3-compatible objects through Athena storage.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_head`
+
+Read object metadata with the raw S3-compatible storage binding.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_exists`
+
+Check whether a raw storage object exists.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_validate`
+
+Validate a raw storage object checksum or ETag.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_update`
+
+Update object metadata or state with the raw storage binding.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_copy`
+
+Copy a raw storage object.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_url`
+
+Create a signed URL for a raw storage object.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_public_url`
+
+Create a public URL for a raw storage object.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_delete`
+
+Delete a raw storage object.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_upload_url`
+
+Create an upload URL for a raw storage object.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_versions`
+
+List versions for a raw storage object or prefix.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_version_restore`
+
+Restore a specific raw storage object version.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_version_delete`
+
+Delete a specific raw storage object version.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_post_policy`
+
+Create a signed POST policy for a raw storage object upload.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_folder_create`
+
+Create a folder in the raw S3-compatible object namespace.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_folder_delete`
+
+Delete a folder in the raw S3-compatible object namespace.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_object_folder_rename`
+
+Rename a folder in the raw S3-compatible object namespace.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_list`
+
+List buckets visible to the Athena storage binding.
+
+**Inputs:**
+- `input` (object, optional): Optional opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_create`
+
+Create a bucket through the Athena storage binding.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_delete`
+
+Delete a bucket through the Athena storage binding.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_cors_get`
+
+Read bucket CORS configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_cors_set`
+
+Set bucket CORS configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_cors_delete`
+
+Delete bucket CORS configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_lifecycle_get`
+
+Read bucket lifecycle configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_lifecycle_set`
+
+Set bucket lifecycle configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_lifecycle_delete`
+
+Delete bucket lifecycle configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_policy_get`
+
+Read bucket policy configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_policy_set`
+
+Set bucket policy configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_policy_delete`
+
+Delete bucket policy configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_public_access_get`
+
+Read bucket public-access block configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_public_access_set`
+
+Set bucket public-access block configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_bucket_public_access_delete`
+
+Delete bucket public-access block configuration.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_multipart_create`
+
+Create a multipart upload session for a managed storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_multipart_sign_part`
+
+Sign a multipart upload part for a managed storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_multipart_complete`
+
+Complete a multipart upload for a managed storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_multipart_abort`
+
+Abort a multipart upload for a managed storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_multipart_list_parts`
+
+List parts for a multipart upload on a managed storage file.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+### `storage_audit_list`
+
+List storage audit events.
+
+**Inputs:**
+- `input` (object, required): Opaque request payload forwarded to Athena storage
+
+**Read-only safe:** Yes
+
+**Backend:** Athena Storage (SDK + raw /storage routes)
+
+---
+
+## Admin Client Catalog & Statistics
+
+### `list_athena_clients_admin`
+
+Experimental admin tool. List Athena clients from the database-backed admin catalog.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** /admin/clients* routes
+
+---
+
+### `create_athena_client`
+
+Experimental admin tool. Create an Athena client in the admin catalog. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `client_name` (string, required): Athena client name
+- `description` (string, optional): 
+- `pg_uri` (string, optional): 
+- `pg_uri_env_var` (string, optional): 
+- `is_active` (boolean, optional): 
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/clients* routes
+
+---
+
+### `update_athena_client`
+
+Experimental admin tool. Update an Athena client in the admin catalog. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `client_name` (string, required): Athena client name
+- `description` (string, optional): 
+- `pg_uri` (string, optional): 
+- `pg_uri_env_var` (string, optional): 
+- `is_active` (boolean, optional): 
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/clients* routes
+
+---
+
+### `delete_athena_client`
+
+Experimental admin tool. Soft-delete an Athena client from the admin catalog. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `client_name` (string, required): Athena client name
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/clients* routes
+
+---
+
+### `freeze_athena_client`
+
+Experimental admin tool. Freeze or unfreeze an Athena client. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `client_name` (string, required): Athena client name
+- `is_frozen` (boolean, required): Whether the client should be frozen
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/clients* routes
+
+---
+
+### `list_client_statistics`
+
+Experimental admin tool. List aggregated Athena client statistics from gateway logs.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `refresh_client_statistics`
+
+Experimental admin tool. Rebuild Athena client statistics from gateway logs. Blocked when read_only mode is enabled.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_client_statistics`
+
+Experimental admin tool. Inspect per-client Athena statistics and touched tables.
+
+**Inputs:**
+- `client_name` (string, required): Athena client name
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `toggle_supabase_ssl_enforcement`
+
+Experimental admin tool. Enable or disable Supabase SSL enforcement for a project. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `enabled` (boolean, required): Whether Supabase SSL enforcement should be enabled
+- `access_token` (string, optional): Optional override for SUPABASE_ACCESS_TOKEN
+- `project_ref` (string, optional): Optional override for PROJECT_REF
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+## API Keys, Rights & Enforcement
+
+### `list_api_keys`
+
+Experimental admin tool. List Athena API keys using the admin API.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `create_api_key`
+
+Experimental admin tool. Create an Athena API key. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `name` (string, required): Human-readable API key name
+- `description` (string, optional): Optional description
+- `client_name` (string, optional): Optional client binding for this key
+- `expires_at` (string, optional): Optional ISO date-time expiry
+- `rights` (array, optional): Rights to grant
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `update_api_key`
+
+Experimental admin tool. Update an existing Athena API key. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `id` (string, required): API key UUID
+- `name` (string, optional): 
+- `description` (string, optional): 
+- `client_name` (string, optional): 
+- `expires_at` (string, optional): 
+- `is_active` (boolean, optional): 
+- `rights` (array, optional): 
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `delete_api_key`
+
+Experimental admin tool. Delete an Athena API key. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `id` (string, required): API key UUID
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `list_api_key_rights`
+
+Experimental admin tool. List available Athena API key rights.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `create_api_key_right`
+
+Experimental admin tool. Create an Athena API key right. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `name` (string, required): Right name
+- `description` (string, optional): Optional description
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `update_api_key_right`
+
+Experimental admin tool. Update an Athena API key right. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `id` (string, required): API key right UUID
+- `name` (string, optional): 
+- `description` (string, optional): 
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `delete_api_key_right`
+
+Experimental admin tool. Delete an Athena API key right. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `id` (string, required): API key UUID
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `get_api_key_config`
+
+Experimental admin tool. Read the global Athena API key enforcement configuration.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `update_api_key_config`
+
+Experimental admin tool. Update global Athena API key enforcement. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `enforce_api_keys` (boolean, required): Whether API keys are globally enforced
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `list_api_key_clients`
+
+Experimental admin tool. List per-client Athena API key enforcement overrides.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `save_api_key_client`
+
+Experimental admin tool. Create or update a per-client Athena API key enforcement override. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `client_name` (string, required): Athena client name
+- `enforce_api_keys` (boolean, required): Whether API keys are enforced for this client
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+### `delete_api_key_client`
+
+Experimental admin tool. Delete a per-client Athena API key enforcement override. Blocked when read_only mode is enabled.
+
+**Inputs:**
+- `client_name` (string, required): Athena client name
+
+**Read-only safe:** No — blocked when READ_ONLY=true
+
+**Backend:** /admin/api-keys* routes
+
+---
+
+## Registry, Metrics & Observability
+
+### `list_router_registry`
+
+List Athena router registry entries.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `list_registry_entries`
+
+List API registry entries from Athena.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_registry_entry`
+
+Fetch a specific API registry entry by ID.
+
+**Inputs:**
+- `api_registry_id` (string, required): Registry row identifier
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_metrics`
+
+Fetch Athena's Prometheus metrics payload.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_embedded_openapi`
+
+Download Athena's embedded OpenAPI YAML document.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+### `get_websocket_info`
+
+Read Athena's websocket gateway contract metadata.
+
+**Inputs:**
+See full schema.
+
+**Read-only safe:** Yes
+
+**Backend:** Athena HTTP API or @xylex-group/athena SDK
+
+---
+
+
+## Notes
+- This reference is generated from the current mcp-tools.json.
+- For the absolute latest, see the source in the athena-mcp repository.

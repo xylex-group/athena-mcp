@@ -326,6 +326,11 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 
 ## Tools
 
+See the comprehensive per-tool documentation:
+
+- In this repo: `docs/TOOLS.md` and `docs/TOOLS-REFERENCE.md` (auto-generated, lists **all tools** with details, inputs, backend, read-only status).
+- In the main Athena docs site: `athena/apps/docs/content/docs/mcp-server/tools-reference.mdx` and related pages.
+
 | Tool                            | Description                                                          |
 | ------------------------------- | -------------------------------------------------------------------- |
 | `list_tables`                   | List all tables in the connected database                            |
@@ -398,9 +403,10 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 Tool schemas are documented in:
 - [`mcp-tools.json`](mcp-tools.json) (MCP-native)
 - [`athena-mcp-openapi.yaml`](athena-mcp-openapi.yaml) (OpenAPI 3.0)
-- **[`docs/TOOLS.md`](docs/TOOLS.md)** — **Comprehensive human-readable reference for every tool**, including detailed descriptions, input/output notes, read-only behavior, SDK vs raw path guidance, and examples.
+- **[`docs/TOOLS.md`](docs/TOOLS.md)** (in this repo)
+- **Canonical detailed reference** (integrated into the main Athena documentation): see the MCP section at `athena/apps/docs` → `/docs/mcp-server/tools-reference` (includes documentation for every tool).
 
-We strongly recommend reading `docs/TOOLS.md` for agent prompt context or human onboarding.
+The primary long-form documentation lives in the main Athena docs site under the mcp-server section.
 
 ## Configuration
 

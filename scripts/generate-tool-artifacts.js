@@ -955,11 +955,11 @@ const definitions = {
 };
 
 const tools = [
-  ["list_tables", "List all tables available in the connected PostgreSQL database", "EmptyRequest"],
+  ["list_tables", "List all tables available in the connected PostgreSQL database. Primary schema discovery tool.", "EmptyRequest"],
   ["list_extensions", "List all installed PostgreSQL extensions. May return empty if the gateway does not expose extension metadata.", "EmptyRequest"],
   ["list_migrations", "List applied database migrations", "ListMigrationsRequest"],
   ["apply_migration", "Apply a SQL migration against the connected database. Blocked when read_only mode is enabled.", "ApplyMigrationRequest"],
-  ["execute_sql", "Execute a raw SQL query against the connected database. Write operations are blocked when read_only mode is enabled.", "ExecuteSqlRequest"],
+  ["execute_sql", "Execute a raw SQL query. Write operations (and queries containing write keywords) are blocked when READ_ONLY mode is enabled. Supports optional driver selection.", "ExecuteSqlRequest"],
   ["get_logs", "Retrieve recent database or application logs", "GetLogsRequest"],
   ["get_columns_of_table", "Describe columns for a table using Athena's schema API", "GetColumnsRequest"],
   ["list_table_metadata", "Return the full metadata for a table: schema name, table name, and each column's name, type, default value, and nullable flag", "ListTableMetadataRequest"],
@@ -1111,7 +1111,7 @@ const tools = [
   ["chat_send_message", "Send a message. Blocked in read_only.", "SendMessageRequest"],
   ["chat_get_realtime_info", "Get chat realtime connection metadata via SDK.", "EmptyRequest"],
   ["chat_search_messages", "Search chat messages.", "ChatSearchRequest"],
-  ["sdk_db_select", "SDK-driven select via db.from().select().findMany() with filters.", "SdkSelectRequest"],
+  ["sdk_db_select", "Powerful select using the official SDK builder (db.from(table).select(...).eq(...).findMany()). Excellent for relations and typed queries.", "SdkSelectRequest"],
   ["sdk_db_insert", "SDK insert/upsert via db module. Blocked in read_only.", "SdkInsertRequest"],
   ["sdk_db_update", "SDK update via db.from().update(). Blocked in read_only.", "SdkUpdateRequest"],
   ["sdk_db_delete", "SDK delete via db module. Blocked in read_only.", "SdkDeleteRequest"],
