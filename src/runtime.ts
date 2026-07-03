@@ -1,7 +1,6 @@
 import type { AthenaSdkClientWithStorage } from "@xylex-group/athena" with {
   "resolution-mode": "require",
 };
-import athenaSdk = require("@xylex-group/athena");
 import { z } from "zod";
 import type { AthenaServerConfig } from "./config.js";
 import { errorContent } from "./responses.js";
@@ -19,7 +18,8 @@ type AthenaCreateClient = (
   options: AthenaStorageClientOptions,
 ) => AthenaSdkClientWithStorage<false>;
 
-const { createClient } = athenaSdk as {
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { createClient } = require("@xylex-group/athena") as {
   createClient: AthenaCreateClient;
 };
 

@@ -146,7 +146,7 @@ export function registerTool(
   definition: ToolDefinitionWithoutShape,
 ): void;
 
-export function registerTool<TShape extends z.ZodRawShape = {}>(
+export function registerTool<TShape extends z.ZodRawShape>(
   server: McpServer,
   runtime: AthenaRuntime,
   definition: ToolDefinitionWithShape<TShape>,
