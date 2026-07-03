@@ -1,0 +1,67 @@
+project_name: '@xylex-group/athena-mcp'
+version: 0.1.0
+port: 4000
+build_dir: ./
+app_type: nodejs
+build_command: pnpm run build
+start_command: pnpm run node
+install_command: pnpm install
+environment:
+  ATHENA_CLIENT: ${ATHENA_CLIENT}
+  NPM_ACCESS_TOKEN: ${NPM_ACCESS_TOKEN}
+  ATHENA_ADMIN_EXPERIMENTAL_ENABLED: ${ATHENA_ADMIN_EXPERIMENTAL_ENABLED}
+  READ_ONLY: ${READ_ONLY}
+  ATHENA_AVAILABLE_CLIENTS: ${ATHENA_AVAILABLE_CLIENTS}
+  ATHENA_API_KEY: ${ATHENA_API_KEY}
+services:
+- name: '@xylex-group/athena-mcp'
+  target: nodejs
+  branch: main
+  port: 4000
+  root_directory: ./
+  environment:
+    ATHENA_CLIENT: ${ATHENA_CLIENT}
+    NPM_ACCESS_TOKEN: ${NPM_ACCESS_TOKEN}
+    ATHENA_ADMIN_EXPERIMENTAL_ENABLED: ${ATHENA_ADMIN_EXPERIMENTAL_ENABLED}
+    READ_ONLY: ${READ_ONLY}
+    ATHENA_AVAILABLE_CLIENTS: ${ATHENA_AVAILABLE_CLIENTS}
+    ATHENA_API_KEY: ${ATHENA_API_KEY}
+  url: null
+  healthcheck_path: null
+  restart_policy: on_failure
+  restart_policy_max_failure_count: 10
+  start_wrapper: pm2
+  commands:
+    pre: null
+    install: pnpm install
+    build: pnpm run build
+    start: pnpm run node
+    dev: null
+  force_run_from_root: false
+  version_targets:
+  - package.json
+  systemd_service_name: null
+  systemd: null
+systemd_service_name: null
+systemd: null
+kafka_brokers: null
+kafka_topic: null
+kafka_public_url: null
+log_files: null
+monitor_url: null
+monitor_method: null
+monitor_expected_code: null
+monitor_interval: null
+database: null
+target: nodejs
+branch: main
+crate_name: null
+npm_script: null
+port_storybook: null
+url: null
+url_storybook: null
+linear: null
+github: null
+publish: null
+version_targets:
+- package.json
