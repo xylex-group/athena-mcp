@@ -118,20 +118,15 @@ export function loadConfig(): AthenaServerConfig {
     ""
   ).trim();
 
-  if (!defaultClient) {
-    throw new Error(
-      "Configure ATHENA_CLIENT or ATHENA_DEFAULT_CLIENT, or supply ATHENA_AVAILABLE_CLIENTS.",
-    );
-  }
-
   const normalizedClients = availableClients.length
     ? availableClients
-    : [defaultClient];
-  if (!normalizedClients.includes(defaultClient)) {
-    throw new Error(
-      `Default Athena client "${defaultClient}" is not in ATHENA_AVAILABLE_CLIENTS.`,
-    );
-  }
+    : (defaultClient ? [defaultClient] : []);
+
+  // Do not throw here: allow server to boot so MCP host gets a live connection.
+  // Tool calls (via resolveClientName) and admin flows will surface clear configuration errors.
+  const effectiveDefault = defaultClient && normalizedClients.includes(defaultClient)
+    ? defaultClient
+    : (normalizedClients[0] ?? "");
 
   return {
     adminExperimentalEnabled:
@@ -141,7 +136,7 @@ export function loadConfig(): AthenaServerConfig {
     apiKey,
     availableClients: normalizedClients,
     baseUrl: baseUrlRaw.replace(/\/+$/, ""),
-    defaultClient,
+    defaultClient: effectiveDefault,
     healthPort:
       cli.healthPort ??
       (process.env.HEALTH_PORT

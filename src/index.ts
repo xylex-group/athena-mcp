@@ -41,6 +41,10 @@ function startHealthServer(): void {
     res.end();
   });
 
+  healthServer.on("error", (err) => {
+    process.stderr.write(`athena-mcp health server error on port ${config.healthPort}: ${err.message}\n`);
+  });
+
   healthServer.listen(config.healthPort, () => {
     process.stderr.write(
       `athena-mcp health server listening on port ${config.healthPort}\n`,

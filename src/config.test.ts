@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { loadConfig } from "./config.js";
+import { AthenaRuntime } from "./runtime.js";
 
 const ORIGINAL_ENV = { ...process.env };
 const ORIGINAL_ARGV = [...process.argv];
@@ -22,12 +23,21 @@ describe("loadConfig", () => {
     expect(config.adminExperimentalEnabled).toBe(true);
   });
 
-  it("rejects a default client outside the configured allowlist", () => {
+  it("allows load with default outside allowlist but resolveClientName rejects it", () => {
     process.env.ATHENA_CLIENT = "primary";
     process.env.ATHENA_AVAILABLE_CLIENTS = "analytics";
 
-    expect(() => loadConfig()).toThrow(
-      'Default Athena client "primary" is not in ATHENA_AVAILABLE_CLIENTS.',
+    const config = loadConfig();
+    // load succeeds (prevents MCP server startup crashes on misconfig)
+    expect(config.defaultClient).toBe("analytics"); // fell back to first in list
+    expect(config.availableClients).toEqual(["analytics"]);
+
+    const runtime = new AthenaRuntime(config);
+    // default now uses the (only) allowed one
+    expect(runtime.resolveClientName()).toBe("analytics");
+    // override to disallowed still errors (at use time)
+    expect(() => runtime.resolveClientName("primary")).toThrow(
+      'Athena client "primary" is not allowed',
     );
   });
 
