@@ -190,6 +190,70 @@ export class AthenaRuntime {
   public getDbModule(clientName: string): any {
     return (this.getSdkClient(clientName) as any).db;
   }
+
+  /**
+   * Low-level SDK request using the unified client.request surface.
+   * Useful for hitting auth/chat/gateway surfaces reliably.
+   */
+  public async sdkRequest(
+    clientName: string,
+    opts: {
+      service?: "auth" | "chat" | "gateway" | "db" | "storage";
+      method?: string;
+      path: string;
+      body?: unknown;
+      headers?: Record<string, string>;
+    },
+  ): Promise<unknown> {
+    const client = this.getSdkClient(clientName);
+    const reqFn = (client as any).request;
+    if (typeof reqFn === "function") {
+      return reqFn.call(client, {
+        service: opts.service ?? "gateway",
+        method: opts.method ?? "GET",
+        path: opts.path,
+        body: opts.body,
+        headers: opts.headers,
+      });
+    }
+    // Fallback to direct fetch if SDK request not available
+    const fullPath = opts.path.startsWith("/") ? opts.path : `/${opts.path}`;
+    return this.apiFetch(fullPath, clientName, {
+      method: opts.method,
+      body: opts.body,
+      headers: opts.headers,
+    });
+  }
+
+  /** Execute an auth action via the best available path. */
+  public async performAuth(clientName: string, action: string, payload?: unknown): Promise<unknown> {
+    const auth = this.getAuthModule(clientName);
+    if (auth && typeof auth[action] === "function") {
+      return auth[action](payload);
+    }
+    // Fallback via unified request
+    return this.sdkRequest(clientName, {
+      service: "auth",
+      method: "POST",
+      path: `/auth/${action.replace(/_/g, "-")}`,
+      body: payload,
+    });
+  }
+
+  /** Execute chat action. */
+  public async performChat(clientName: string, namespace: "room" | "message", action: string, payload?: unknown): Promise<unknown> {
+    const chat = this.getChatModule(clientName);
+    const mod = chat?.[namespace];
+    if (mod && typeof mod[action] === "function") {
+      return mod[action](payload);
+    }
+    return this.sdkRequest(clientName, {
+      service: "chat",
+      method: "POST",
+      path: `/chat/${namespace}s/${action}`,
+      body: payload,
+    });
+  }
 }
 
 export function readOnlyToolError(toolName: string) {

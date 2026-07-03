@@ -86,7 +86,9 @@ export function registerDataTools(
   runtime: AthenaRuntime,
 ): void {
   registerTool(server, runtime, {
-    description: "List all tables available in the connected PostgreSQL database",
+    description:
+      "List every table visible to the current Athena client. " +
+      "Returns schema-qualified table information. This is usually the first tool an agent calls for schema discovery.",
     handler: async ({ clientName, runtime }) =>
       jsonContent(await runtime.apiFetch("/schema/tables", clientName)),
     name: "list_tables",
@@ -801,7 +803,8 @@ export function registerDataTools(
 
   registerTool(server, runtime, {
     description:
-      "Execute a raw SQL query against the connected database. Write operations are blocked when read_only mode is enabled.",
+      "Execute a raw SQL query. Write keywords are blocked under READ_ONLY mode. " +
+      "Supports db_name and driver selection when the gateway exposes multiple backends.",
     name: "execute_sql",
     shape: {
       db_name: z

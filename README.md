@@ -107,6 +107,8 @@ MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Ath
 - [x] Direct gateway: `gateway_fetch`, `gateway_insert`, `gateway_rpc`, `gateway_sql`
 - [x] Management extras: `list_views_management`, `list_management_functions`, `management_capabilities`
 
+> **Full per-tool documentation** (recommended): See [`docs/TOOLS.md`](docs/TOOLS.md). It contains expanded descriptions, parameter explanations, read-only semantics, and usage guidance for **all 169+ tools**.
+
 ## Install
 
 ```bash
@@ -393,7 +395,12 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 | `get_websocket_info`            | Read websocket gateway contract metadata                             |
 | `auth_*`, `chat_*`, `sdk_*` etc | SDK module coverage for auth, chat, db fluent, direct gateway routes |
 
-Tool schemas are documented in [`mcp-tools.json`](mcp-tools.json) (MCP-native) and [`athena-mcp-openapi.yaml`](athena-mcp-openapi.yaml) (OpenAPI 3.0).
+Tool schemas are documented in:
+- [`mcp-tools.json`](mcp-tools.json) (MCP-native)
+- [`athena-mcp-openapi.yaml`](athena-mcp-openapi.yaml) (OpenAPI 3.0)
+- **[`docs/TOOLS.md`](docs/TOOLS.md)** — **Comprehensive human-readable reference for every tool**, including detailed descriptions, input/output notes, read-only behavior, SDK vs raw path guidance, and examples.
+
+We strongly recommend reading `docs/TOOLS.md` for agent prompt context or human onboarding.
 
 ## Configuration
 

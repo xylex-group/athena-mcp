@@ -22,91 +22,126 @@ const gatewayRpcSchema = {
   args: z.record(z.string(), z.unknown()).optional(),
 };
 
+/**
+ * Low-level direct exposure of Athena gateway + management routes as separate named tools.
+ * Complements the higher-level data tools and the pure SDK tools.
+ */
 export function registerGatewayTools(
   server: McpServer,
   runtime: AthenaRuntime,
 ): void {
-  // Direct gateway surfaces (separate tool calls)
   registerTool(server, runtime, {
-    description: "Direct /gateway/fetch via SDK request surface or raw.",
+    description:
+      "Low-level /gateway/fetch (or SDK equivalent). Use for precise control over fetch semantics. " +
+      "For most cases prefer the higher level row tools or sdk_db_select.",
     name: "gateway_fetch",
     shape: gatewayFetchSchema,
     handler: async ({ clientName, runtime }, input) => {
-      const client = runtime.getSdkClient(clientName);
-      // Prefer SDK if available, else fallback
-      if ((client as any).db && typeof (client as any).db.from === "function") {
-        let b = (client as any).db.from(input.table_name);
-        if (input.select) b = b.select(input.select);
-        if (input.where) {
-          Object.entries(input.where).forEach(([k, v]) => { b = b.eq(k, v); });
+      try {
+        const client = runtime.getSdkClient(clientName) as any;
+        if (client?.db?.from) {
+          let b = client.db.from(input.table_name);
+          if (input.select) b = b.select(input.select);
+          if (input.where) Object.entries(input.where).forEach(([k, v]) => { if (b.eq) b = b.eq(k, v); });
+          if (input.limit && b.limit) b = b.limit(input.limit);
+          return jsonContent(await b.findMany());
         }
-        if (input.limit) b = b.limit(input.limit);
-        return jsonContent(await b.findMany());
+        return jsonContent(await runtime.apiFetch("/gateway/fetch", clientName, { method: "POST", body: input }));
+      } catch (e: any) {
+        return jsonContent({ error: String(e?.message || e) });
       }
-      return jsonContent(await runtime.apiFetch("/gateway/fetch", clientName, { method: "POST", body: input }));
     },
   });
 
   registerTool(server, runtime, {
-    description: "Direct insert via /gateway/insert (or SDK). Blocked in read_only.",
+    description: "Direct insert using the /gateway/insert contract (or SDK). Write-blocked in read-only mode.",
     name: "gateway_insert",
     shape: gatewayInsertSchema,
     handler: async ({ clientName, runtime }, input) => {
       if (runtime.config.readOnly) return readOnlyToolError("gateway_insert");
-      const client = runtime.getSdkClient(clientName);
-      if ((client as any).db?.insert) {
-        return jsonContent(await (client as any).db.from(input.table_name).insert(input.insert_body));
+      try {
+        const client = runtime.getSdkClient(clientName) as any;
+        if (client?.db?.from) {
+          return jsonContent(await client.db.from(input.table_name).insert(input.insert_body));
+        }
+        return jsonContent(await runtime.apiFetch("/gateway/insert", clientName, { method: "POST", body: input }));
+      } catch (e: any) {
+        return jsonContent({ error: String(e?.message || e) });
       }
-      return jsonContent(await runtime.apiFetch("/gateway/insert", clientName, { method: "POST", body: input }));
     },
   });
 
   registerTool(server, runtime, {
-    description: "Execute RPC via /gateway/rpc/{name}.",
+    description: "Invoke a named RPC function via the canonical /gateway/rpc/{function_name} path.",
     name: "gateway_rpc",
     shape: gatewayRpcSchema,
     handler: async ({ clientName, runtime }, input) => {
-      const path = `/gateway/rpc/${encodeURIComponent(input.function_name)}`;
-      return jsonContent(await runtime.apiFetch(path, clientName, { method: "POST", body: { args: input.args ?? {} } }));
+      try {
+        const path = `/gateway/rpc/${encodeURIComponent(input.function_name)}`;
+        return jsonContent(await runtime.apiFetch(path, clientName, { method: "POST", body: { args: input.args ?? {} } }));
+      } catch (e: any) {
+        return jsonContent({ error: String(e?.message || e) });
+      }
     },
   });
 
   registerTool(server, runtime, {
-    description: "Execute raw SQL via /gateway/sql or /query/sql (driver aware).",
+    description:
+      "Execute SQL directly against /gateway/sql (or /query/sql). " +
+      "The driver parameter selects the execution backend when supported. " +
+      "Write statements are rejected when the server is in read-only mode.",
     name: "gateway_sql",
     shape: {
-      sql: z.string(),
-      driver: z.enum(["athena", "postgresql", "supabase"]).optional(),
+      sql: z.string().describe("SQL statement to run"),
+      driver: z.enum(["athena", "postgresql", "supabase"]).optional().describe("Execution driver"),
     },
     handler: async ({ clientName, runtime }, input) => {
-      // may be write; caller + readOnly in execute_sql already guards higher, here forward
-      if (runtime.config.readOnly && /insert|update|delete|drop|create|alter/i.test(input.sql)) {
+      if (runtime.config.readOnly && /insert|update|delete|drop|create|alter|truncate|grant|revoke/i.test(input.sql)) {
         return readOnlyToolError("gateway_sql");
       }
-      return jsonContent(await runtime.apiFetch("/gateway/sql", clientName, { method: "POST", body: input }));
+      try {
+        return jsonContent(await runtime.apiFetch("/gateway/sql", clientName, { method: "POST", body: input }));
+      } catch (e: any) {
+        return jsonContent({ error: String(e?.message || e) });
+      }
     },
   });
 
-  // Additional major management direct routes exposed as tools
   registerTool(server, runtime, {
-    description: "List managed views (via management API).",
+    description: "List database views using the management API surface (/management/views).",
     name: "list_views_management",
-    shape: { schema: z.string().optional() },
+    shape: { schema: z.string().optional().describe("Optional schema filter") },
     handler: async ({ clientName, runtime }, input) => {
-      const q = input.schema ? `?schema=${encodeURIComponent(input.schema)}` : "";
-      return jsonContent(await runtime.apiFetch(`/management/views${q}`, clientName));
+      try {
+        const q = input.schema ? `?schema=${encodeURIComponent(input.schema)}` : "";
+        return jsonContent(await runtime.apiFetch(`/management/views${q}`, clientName));
+      } catch (e: any) {
+        return jsonContent({ error: String(e?.message || e) });
+      }
     },
   });
 
   registerTool(server, runtime, {
-    description: "List provisioned functions or extensions surface (management).",
+    description: "List functions exposed through the management API.",
     name: "list_management_functions",
-    handler: async ({ clientName, runtime }) => jsonContent(await runtime.apiFetch("/management/functions", clientName)),
+    handler: async ({ clientName, runtime }) => {
+      try {
+        return jsonContent(await runtime.apiFetch("/management/functions", clientName));
+      } catch (e: any) {
+        return jsonContent({ error: String(e?.message || e) });
+      }
+    },
   });
 
   registerTool(server, runtime, {
-    description: "Get management capabilities (also exposed as get_management_capabilities).",
+    description: "Return management capabilities for the current client (rights required for various operations). Alias of get_management_capabilities.",
     name: "management_capabilities",
-    handler: async ({ clientName, runtime }) => jsonContent(await runtime.apiFetch("/management/capabilities", clientName)),
+    handler: async ({ clientName, runtime }) => {
+      try {
+        return jsonContent(await runtime.apiFetch("/management/capabilities", clientName));
+      } catch (e: any) {
+        return jsonContent({ error: String(e?.message || e) });
+      }
+    },
   });
 }
