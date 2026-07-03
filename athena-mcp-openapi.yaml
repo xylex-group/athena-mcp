@@ -660,10 +660,61 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_confirm_upload:
+    post:
+      summary: "storage file confirm upload"
+      description: "Confirm that a managed Athena storage upload completed and persist any final metadata."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileOptionalInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_upload_binary:
+    post:
+      summary: "storage file upload binary"
+      description: "Upload small file content directly through MCP using either base64 or UTF-8 text."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileBinaryUploadRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
   /tools/storage_file_list:
     post:
       summary: "storage file list"
       description: "List managed Athena storage files."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_search:
+    post:
+      summary: "storage file search"
+      description: "Search managed Athena storage files."
       requestBody:
         required: true
         content:
@@ -711,6 +762,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_update_many:
+    post:
+      summary: "storage file update many"
+      description: "Update many managed Athena storage files in one call."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
   /tools/storage_file_delete:
     post:
       summary: "storage file delete"
@@ -728,10 +796,112 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_delete_many:
+    post:
+      summary: "storage file delete many"
+      description: "Delete many managed Athena storage files in one call."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_restore:
+    post:
+      summary: "storage file restore"
+      description: "Restore a soft-deleted managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileIdRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_purge:
+    post:
+      summary: "storage file purge"
+      description: "Purge a managed Athena storage file permanently."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileIdRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_copy:
+    post:
+      summary: "storage file copy"
+      description: "Copy a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
   /tools/storage_file_url:
     post:
       summary: "storage file url"
       description: "Generate a signed URL for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileUrlRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_public_url:
+    post:
+      summary: "storage file public url"
+      description: "Generate the public URL for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileIdRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_proxy_url:
+    post:
+      summary: "storage file proxy url"
+      description: "Generate the proxy URL for a managed Athena storage file."
       requestBody:
         required: true
         content:
@@ -796,6 +966,142 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_visibility_set_many:
+    post:
+      summary: "storage file visibility set many"
+      description: "Update visibility for many managed Athena storage files in one call."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_versions:
+    post:
+      summary: "storage file versions"
+      description: "List managed Athena storage file versions."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileIdRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_version_restore:
+    post:
+      summary: "storage file version restore"
+      description: "Restore a specific managed Athena storage file version."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileVersionRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_version_delete:
+    post:
+      summary: "storage file version delete"
+      description: "Delete a specific managed Athena storage file version."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileVersionRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_retention_get:
+    post:
+      summary: "storage file retention get"
+      description: "Read retention settings for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileRetentionGetRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_file_retention_set:
+    post:
+      summary: "storage file retention set"
+      description: "Set retention settings for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageFileInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_folder_list:
+    post:
+      summary: "storage folder list"
+      description: "List managed Athena storage folders under a prefix."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_folder_tree:
+    post:
+      summary: "storage folder tree"
+      description: "Return the managed Athena storage folder tree under a prefix."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
   /tools/storage_folder_delete:
     post:
       summary: "storage folder delete"
@@ -817,6 +1123,74 @@ paths:
     post:
       summary: "storage folder move"
       description: "Move a managed Athena storage folder."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_permission_list:
+    post:
+      summary: "storage permission list"
+      description: "List file-level permissions for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_permission_grant:
+    post:
+      summary: "storage permission grant"
+      description: "Grant a permission for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_permission_revoke:
+    post:
+      summary: "storage permission revoke"
+      description: "Revoke a permission for a managed Athena storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_permission_check:
+    post:
+      summary: "storage permission check"
+      description: "Check a permission for a managed Athena storage file."
       requestBody:
         required: true
         content:
@@ -864,6 +1238,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_exists:
+    post:
+      summary: "storage object exists"
+      description: "Check whether a raw storage object exists."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_validate:
+    post:
+      summary: "storage object validate"
+      description: "Validate a raw storage object checksum or ETag."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
   /tools/storage_object_update:
     post:
       summary: "storage object update"
@@ -881,10 +1289,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_copy:
+    post:
+      summary: "storage object copy"
+      description: "Copy a raw storage object."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
   /tools/storage_object_url:
     post:
       summary: "storage object url"
       description: "Create a signed URL for a raw storage object."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_public_url:
+    post:
+      summary: "storage object public url"
+      description: "Create a public URL for a raw storage object."
       requestBody:
         required: true
         content:
@@ -919,6 +1361,74 @@ paths:
     post:
       summary: "storage object upload url"
       description: "Create an upload URL for a raw storage object."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_versions:
+    post:
+      summary: "storage object versions"
+      description: "List versions for a raw storage object or prefix."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_version_restore:
+    post:
+      summary: "storage object version restore"
+      description: "Restore a specific raw storage object version."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_version_delete:
+    post:
+      summary: "storage object version delete"
+      description: "Delete a specific raw storage object version."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_object_post_policy:
+    post:
+      summary: "storage object post policy"
+      description: "Create a signed POST policy for a raw storage object upload."
       requestBody:
         required: true
         content:
@@ -1072,6 +1582,261 @@ paths:
     post:
       summary: "storage bucket cors delete"
       description: "Delete bucket CORS configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_lifecycle_get:
+    post:
+      summary: "storage bucket lifecycle get"
+      description: "Read bucket lifecycle configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_lifecycle_set:
+    post:
+      summary: "storage bucket lifecycle set"
+      description: "Set bucket lifecycle configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_lifecycle_delete:
+    post:
+      summary: "storage bucket lifecycle delete"
+      description: "Delete bucket lifecycle configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_policy_get:
+    post:
+      summary: "storage bucket policy get"
+      description: "Read bucket policy configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_policy_set:
+    post:
+      summary: "storage bucket policy set"
+      description: "Set bucket policy configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_policy_delete:
+    post:
+      summary: "storage bucket policy delete"
+      description: "Delete bucket policy configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_public_access_get:
+    post:
+      summary: "storage bucket public access get"
+      description: "Read bucket public-access block configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_public_access_set:
+    post:
+      summary: "storage bucket public access set"
+      description: "Set bucket public-access block configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_bucket_public_access_delete:
+    post:
+      summary: "storage bucket public access delete"
+      description: "Delete bucket public-access block configuration."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_multipart_create:
+    post:
+      summary: "storage multipart create"
+      description: "Create a multipart upload session for a managed storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_multipart_sign_part:
+    post:
+      summary: "storage multipart sign part"
+      description: "Sign a multipart upload part for a managed storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_multipart_complete:
+    post:
+      summary: "storage multipart complete"
+      description: "Complete a multipart upload for a managed storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_multipart_abort:
+    post:
+      summary: "storage multipart abort"
+      description: "Abort a multipart upload for a managed storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_multipart_list_parts:
+    post:
+      summary: "storage multipart list parts"
+      description: "List parts for a multipart upload on a managed storage file."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericStorageInputRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/storage_audit_list:
+    post:
+      summary: "storage audit list"
+      description: "List storage audit events."
       requestBody:
         required: true
         content:
@@ -2337,6 +3102,84 @@ components:
       required:
         - file_id
         - input
+    StorageFileInputRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: "Managed storage file ID"
+        input:
+          type: object
+          additionalProperties: true
+          description: "Opaque request payload forwarded to Athena storage"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - file_id
+        - input
+    StorageFileOptionalInputRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: "Managed storage file ID"
+        input:
+          type: object
+          additionalProperties: true
+          description: "Optional opaque request payload forwarded to Athena storage"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - file_id
+    StorageFileVersionRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: "Managed storage file ID"
+        version_id:
+          type: string
+          description: "Managed storage file version ID"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - file_id
+        - version_id
+    StorageFileRetentionGetRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: "Managed storage file ID"
+        query:
+          type: object
+          additionalProperties: true
+          description: "Optional StorageFileRetentionRequest subset containing version_id"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - file_id
+    StorageFileBinaryUploadRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: "Managed storage file ID"
+        body_base64:
+          type: string
+          description: "Base64-encoded file contents. Provide this or body_text."
+        body_text:
+          type: string
+          description: "UTF-8 file contents. Provide this or body_base64."
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - file_id
     ToolResult:
       type: object
       properties:

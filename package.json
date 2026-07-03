@@ -14,7 +14,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.0",
-    "@xylex-group/athena": "^2.8.0",
+    "@xylex-group/athena": "^2.12.1",
     "zod": "^3.25.0 || ^4.0.0"
   },
   "description": "MCP server for the Athena",

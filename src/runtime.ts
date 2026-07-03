@@ -1,7 +1,26 @@
-import { createClient } from "@xylex-group/athena";
+import type { AthenaSdkClientWithStorage } from "@xylex-group/athena" with {
+  "resolution-mode": "require",
+};
 import { z } from "zod";
 import type { AthenaServerConfig } from "./config.js";
 import { errorContent } from "./responses.js";
+
+interface AthenaStorageClientOptions {
+  client: string | null | undefined;
+  experimental: {
+    athenaStorageBackend: true;
+  };
+}
+
+type AthenaCreateClient = (
+  baseUrl: string | null | undefined,
+  apiKey: string | null | undefined,
+  options: AthenaStorageClientOptions,
+) => AthenaSdkClientWithStorage<false>;
+
+const { createClient } = require("@xylex-group/athena") as {
+  createClient: AthenaCreateClient;
+};
 
 interface FetchOptions {
   body?: unknown;
@@ -22,7 +41,7 @@ export class AthenaRuntime {
   private readonly clientSelectorSchema?: z.ZodType<string | undefined>;
   private readonly storageClients = new Map<
     string,
-    Record<string, unknown>
+    AthenaSdkClientWithStorage<false>
   >();
 
   constructor(public readonly config: AthenaServerConfig) {
@@ -147,7 +166,7 @@ export class AthenaRuntime {
     });
   }
 
-  public getStorageSdkClient(clientName: string): Record<string, unknown> {
+  public getStorageSdkClient(clientName: string): AthenaSdkClientWithStorage<false> {
     let client = this.storageClients.get(clientName);
     if (!client) {
       client = createClient(this.config.baseUrl, this.config.apiKey, {
@@ -155,7 +174,7 @@ export class AthenaRuntime {
         experimental: {
           athenaStorageBackend: true,
         },
-      } as never) as Record<string, unknown>;
+      });
       this.storageClients.set(clientName, client);
     }
     return client;

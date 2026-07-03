@@ -274,8 +274,29 @@
       }
     },
     {
+      "name": "storage_file_confirm_upload",
+      "description": "Confirm that a managed Athena storage upload completed and persist any final metadata.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileOptionalInputRequest"
+      }
+    },
+    {
+      "name": "storage_file_upload_binary",
+      "description": "Upload small file content directly through MCP using either base64 or UTF-8 text.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileBinaryUploadRequest"
+      }
+    },
+    {
       "name": "storage_file_list",
       "description": "List managed Athena storage files.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_file_search",
+      "description": "Search managed Athena storage files.",
       "inputSchema": {
         "$ref": "#/definitions/GenericStorageInputRequest"
       }
@@ -295,6 +316,13 @@
       }
     },
     {
+      "name": "storage_file_update_many",
+      "description": "Update many managed Athena storage files in one call.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
       "name": "storage_file_delete",
       "description": "Delete a managed Athena storage file.",
       "inputSchema": {
@@ -302,8 +330,50 @@
       }
     },
     {
+      "name": "storage_file_delete_many",
+      "description": "Delete many managed Athena storage files in one call.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_file_restore",
+      "description": "Restore a soft-deleted managed Athena storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileIdRequest"
+      }
+    },
+    {
+      "name": "storage_file_purge",
+      "description": "Purge a managed Athena storage file permanently.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileIdRequest"
+      }
+    },
+    {
+      "name": "storage_file_copy",
+      "description": "Copy a managed Athena storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileInputRequest"
+      }
+    },
+    {
       "name": "storage_file_url",
       "description": "Generate a signed URL for a managed Athena storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileUrlRequest"
+      }
+    },
+    {
+      "name": "storage_file_public_url",
+      "description": "Generate the public URL for a managed Athena storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileIdRequest"
+      }
+    },
+    {
+      "name": "storage_file_proxy_url",
+      "description": "Generate the proxy URL for a managed Athena storage file.",
       "inputSchema": {
         "$ref": "#/definitions/StorageFileUrlRequest"
       }
@@ -330,6 +400,62 @@
       }
     },
     {
+      "name": "storage_file_visibility_set_many",
+      "description": "Update visibility for many managed Athena storage files in one call.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_file_versions",
+      "description": "List managed Athena storage file versions.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileIdRequest"
+      }
+    },
+    {
+      "name": "storage_file_version_restore",
+      "description": "Restore a specific managed Athena storage file version.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileVersionRequest"
+      }
+    },
+    {
+      "name": "storage_file_version_delete",
+      "description": "Delete a specific managed Athena storage file version.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileVersionRequest"
+      }
+    },
+    {
+      "name": "storage_file_retention_get",
+      "description": "Read retention settings for a managed Athena storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileRetentionGetRequest"
+      }
+    },
+    {
+      "name": "storage_file_retention_set",
+      "description": "Set retention settings for a managed Athena storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/StorageFileInputRequest"
+      }
+    },
+    {
+      "name": "storage_folder_list",
+      "description": "List managed Athena storage folders under a prefix.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_folder_tree",
+      "description": "Return the managed Athena storage folder tree under a prefix.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
       "name": "storage_folder_delete",
       "description": "Delete a managed Athena storage folder.",
       "inputSchema": {
@@ -339,6 +465,34 @@
     {
       "name": "storage_folder_move",
       "description": "Move a managed Athena storage folder.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_permission_list",
+      "description": "List file-level permissions for a managed Athena storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_permission_grant",
+      "description": "Grant a permission for a managed Athena storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_permission_revoke",
+      "description": "Revoke a permission for a managed Athena storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_permission_check",
+      "description": "Check a permission for a managed Athena storage file.",
       "inputSchema": {
         "$ref": "#/definitions/GenericStorageInputRequest"
       }
@@ -358,6 +512,20 @@
       }
     },
     {
+      "name": "storage_object_exists",
+      "description": "Check whether a raw storage object exists.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_object_validate",
+      "description": "Validate a raw storage object checksum or ETag.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
       "name": "storage_object_update",
       "description": "Update object metadata or state with the raw storage binding.",
       "inputSchema": {
@@ -365,8 +533,22 @@
       }
     },
     {
+      "name": "storage_object_copy",
+      "description": "Copy a raw storage object.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
       "name": "storage_object_url",
       "description": "Create a signed URL for a raw storage object.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_object_public_url",
+      "description": "Create a public URL for a raw storage object.",
       "inputSchema": {
         "$ref": "#/definitions/GenericStorageInputRequest"
       }
@@ -381,6 +563,34 @@
     {
       "name": "storage_object_upload_url",
       "description": "Create an upload URL for a raw storage object.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_object_versions",
+      "description": "List versions for a raw storage object or prefix.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_object_version_restore",
+      "description": "Restore a specific raw storage object version.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_object_version_delete",
+      "description": "Delete a specific raw storage object version.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_object_post_policy",
+      "description": "Create a signed POST policy for a raw storage object upload.",
       "inputSchema": {
         "$ref": "#/definitions/GenericStorageInputRequest"
       }
@@ -444,6 +654,111 @@
     {
       "name": "storage_bucket_cors_delete",
       "description": "Delete bucket CORS configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_bucket_lifecycle_get",
+      "description": "Read bucket lifecycle configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_bucket_lifecycle_set",
+      "description": "Set bucket lifecycle configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_bucket_lifecycle_delete",
+      "description": "Delete bucket lifecycle configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_bucket_policy_get",
+      "description": "Read bucket policy configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_bucket_policy_set",
+      "description": "Set bucket policy configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_bucket_policy_delete",
+      "description": "Delete bucket policy configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_bucket_public_access_get",
+      "description": "Read bucket public-access block configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_bucket_public_access_set",
+      "description": "Set bucket public-access block configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_bucket_public_access_delete",
+      "description": "Delete bucket public-access block configuration.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_multipart_create",
+      "description": "Create a multipart upload session for a managed storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_multipart_sign_part",
+      "description": "Sign a multipart upload part for a managed storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_multipart_complete",
+      "description": "Complete a multipart upload for a managed storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_multipart_abort",
+      "description": "Abort a multipart upload for a managed storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_multipart_list_parts",
+      "description": "List parts for a multipart upload on a managed storage file.",
+      "inputSchema": {
+        "$ref": "#/definitions/GenericStorageInputRequest"
+      }
+    },
+    {
+      "name": "storage_audit_list",
+      "description": "List storage audit events.",
       "inputSchema": {
         "$ref": "#/definitions/GenericStorageInputRequest"
       }
@@ -1776,6 +2091,115 @@
       "required": [
         "file_id",
         "input"
+      ]
+    },
+    "StorageFileInputRequest": {
+      "type": "object",
+      "properties": {
+        "file_id": {
+          "type": "string",
+          "description": "Managed storage file ID"
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Opaque request payload forwarded to Athena storage"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "file_id",
+        "input"
+      ]
+    },
+    "StorageFileOptionalInputRequest": {
+      "type": "object",
+      "properties": {
+        "file_id": {
+          "type": "string",
+          "description": "Managed storage file ID"
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Optional opaque request payload forwarded to Athena storage"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "file_id"
+      ]
+    },
+    "StorageFileVersionRequest": {
+      "type": "object",
+      "properties": {
+        "file_id": {
+          "type": "string",
+          "description": "Managed storage file ID"
+        },
+        "version_id": {
+          "type": "string",
+          "description": "Managed storage file version ID"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "file_id",
+        "version_id"
+      ]
+    },
+    "StorageFileRetentionGetRequest": {
+      "type": "object",
+      "properties": {
+        "file_id": {
+          "type": "string",
+          "description": "Managed storage file ID"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Optional StorageFileRetentionRequest subset containing version_id"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "file_id"
+      ]
+    },
+    "StorageFileBinaryUploadRequest": {
+      "type": "object",
+      "properties": {
+        "file_id": {
+          "type": "string",
+          "description": "Managed storage file ID"
+        },
+        "body_base64": {
+          "type": "string",
+          "description": "Base64-encoded file contents. Provide this or body_text."
+        },
+        "body_text": {
+          "type": "string",
+          "description": "UTF-8 file contents. Provide this or body_base64."
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "file_id"
       ]
     },
     "ToolResult": {

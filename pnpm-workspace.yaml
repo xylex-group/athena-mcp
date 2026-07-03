@@ -2,3 +2,4 @@ allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:
   - '@xylex-group/athena@2.8.0'
+  - '@xylex-group/athena@2.12.1'
