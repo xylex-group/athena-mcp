@@ -41,10 +41,7 @@ function registerToolWithoutShape(
   clientSelector?: z.ZodType<string | undefined>,
 ): void {
   if (clientSelector) {
-    const callback = (async (
-      input: { client?: unknown },
-      _extra: unknown,
-    ) => {
+    const callback = (async (input: { client?: unknown }) => {
       const clientOverride = input.client;
       const selectedClient = runtime.resolveClientName(
         typeof clientOverride === "string" ? clientOverride : undefined,
@@ -66,7 +63,7 @@ function registerToolWithoutShape(
     return;
   }
 
-  const callback = (async (_extra: unknown) =>
+  const callback = (async () =>
     definition.handler({
       clientName: runtime.resolveClientName(),
       runtime,
@@ -88,7 +85,7 @@ function registerToolWithShape<TShape extends z.ZodRawShape>(
   clientSelector?: z.ZodType<string | undefined>,
 ): void {
   if (!clientSelector) {
-    const callback = (async (input: ToolInput<TShape>, _extra: unknown) =>
+    const callback = (async (input: ToolInput<TShape>) =>
       definition.handler(
         {
           clientName: runtime.resolveClientName(),
@@ -115,10 +112,7 @@ function registerToolWithShape<TShape extends z.ZodRawShape>(
     client: clientSelector,
   };
 
-  const callback = (async (
-    input: ToolInput<TShape> & { client?: unknown },
-    _extra: unknown,
-  ) => {
+  const callback = (async (input: ToolInput<TShape> & { client?: unknown }) => {
     const { client: clientOverride, ...rest } = input;
     const selectedClient = runtime.resolveClientName(
       typeof clientOverride === "string" ? clientOverride : undefined,
@@ -158,7 +152,7 @@ export function registerTool<TShape extends z.ZodRawShape = {}>(
   definition: ToolDefinitionWithShape<TShape>,
 ): void;
 
-export function registerTool<TShape extends z.ZodRawShape = {}>(
+export function registerTool<TShape extends z.ZodRawShape>(
   server: McpServer,
   runtime: AthenaRuntime,
   definition: ToolDefinitionWithoutShape | ToolDefinitionWithShape<TShape>,
