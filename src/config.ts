@@ -94,7 +94,7 @@ export function loadConfig(): AthenaServerConfig {
   const baseUrlRaw = (
     cli.baseUrl ??
     process.env.ATHENA_BASE_URL ??
-    "https://mirror4.athena-cluster.com"
+    "https://mirror2.athena-cluster.com"
   ).trim();
   if (
     !baseUrlRaw.startsWith("http://") &&

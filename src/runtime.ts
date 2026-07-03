@@ -1,27 +1,10 @@
-import type { AthenaSdkClientWithStorage } from "@xylex-group/athena" with {
-  "resolution-mode": "require",
-};
+import {
+  createClient,
+  type AthenaSdkClientWithStorage,
+} from "@xylex-group/athena";
 import { z } from "zod";
 import type { AthenaServerConfig } from "./config.js";
 import { errorContent } from "./responses.js";
-
-interface AthenaStorageClientOptions {
-  client: string | null | undefined;
-  experimental: {
-    athenaStorageBackend: true;
-  };
-}
-
-type AthenaCreateClient = (
-  baseUrl: string | null | undefined,
-  apiKey: string | null | undefined,
-  options: AthenaStorageClientOptions,
-) => AthenaSdkClientWithStorage<false>;
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { createClient } = require("@xylex-group/athena") as {
-  createClient: AthenaCreateClient;
-};
 
 interface FetchOptions {
   body?: unknown;
@@ -174,6 +157,7 @@ export class AthenaRuntime {
         client: clientName,
         experimental: {
           athenaStorageBackend: true,
+
         },
       });
       this.storageClients.set(clientName, client);

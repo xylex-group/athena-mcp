@@ -1,12 +1,12 @@
-import type { AthenaSdkClientWithStorage } from "@xylex-group/athena" with {
-  "resolution-mode": "require",
-};
+import type { AthenaSdkClientWithStorage } from "@xylex-group/athena";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { jsonContent } from "../responses.js";
 import { stringRecordSchema } from "../schemas.js";
 import type { AthenaRuntime, BinarySummary } from "../runtime.js";
 import { registerTool } from "../tooling.js";
+
+
 
 type StorageModule = NonNullable<AthenaSdkClientWithStorage<false>["storage"]>;
 type StorageInput<TShape extends z.ZodRawShape> = z.output<z.ZodObject<TShape>>;
