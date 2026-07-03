@@ -79,6 +79,6 @@ systemd_service_name: null
 target: nodejs
 url: null
 url_storybook: null
-version: 0.3.0
+version: 0.4.0
 version_targets:
 - package.json

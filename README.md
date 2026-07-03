@@ -1,6 +1,6 @@
 # athena-mcp
 
-current version: `0.3.0`
+current version: `0.4.0`
 MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Athena's PostgreSQL management API as MCP tools for use with LLM agents and AI coding assistants.
 
 ## Tool calls
@@ -97,6 +97,15 @@ MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Ath
 - [x] `get_embedded_openapi`: Download Athena's embedded OpenAPI YAML document
 - [x] `get_websocket_info`: Read Athena's websocket gateway contract metadata
 - [x] `toggle_supabase_ssl_enforcement`: Enable or disable Supabase SSL enforcement. Blocked when `read_only` mode is enabled
+
+**SDK Interfacing (Auth, Chat, Db via SDK client)**
+
+- [x] `auth_get_session`, `auth_get_user`, `auth_sign_in`, `auth_sign_up`, `auth_sign_out`, `auth_refresh_token`, `auth_forgot_password`, `auth_reset_password`
+- [x] `auth_admin_list_users`, `auth_admin_create_user`
+- [x] `chat_list_rooms`, `chat_create_room`, `chat_get_room`, `chat_archive_room`, `chat_list_messages`, `chat_send_message`, `chat_search_messages`, `chat_get_realtime_info`
+- [x] `sdk_db_select`, `sdk_db_insert`, `sdk_db_update`, `sdk_db_delete`, `sdk_db_rpc`, `sdk_db_query`, `sdk_verify_connection`
+- [x] Direct gateway: `gateway_fetch`, `gateway_insert`, `gateway_rpc`, `gateway_sql`
+- [x] Management extras: `list_views_management`, `list_management_functions`, `management_capabilities`
 
 ## Install
 
@@ -382,6 +391,7 @@ Or edit the MCP config JSON in Zed settings and add the same `athena` entry as a
 | `get_metrics`                   | Fetch Prometheus metrics                                             |
 | `get_embedded_openapi`          | Download Athena's embedded OpenAPI YAML                              |
 | `get_websocket_info`            | Read websocket gateway contract metadata                             |
+| `auth_*`, `chat_*`, `sdk_*` etc | SDK module coverage for auth, chat, db fluent, direct gateway routes |
 
 Tool schemas are documented in [`mcp-tools.json`](mcp-tools.json) (MCP-native) and [`athena-mcp-openapi.yaml`](athena-mcp-openapi.yaml) (OpenAPI 3.0).
 
@@ -417,6 +427,7 @@ When `READ_ONLY=true`:
 
 - `apply_migration`, `insert_row`, `delete_row`, `update_row`, `create_table`, `edit_table`, `drop_table`, `drop_column`, `create_index`, `drop_index`, `create_api_key`, `update_api_key`, `delete_api_key`, `create_api_key_right`, `update_api_key_right`, `delete_api_key_right`, `update_api_key_config`, `save_api_key_client`, `delete_api_key_client`, `create_athena_client`, `update_athena_client`, `delete_athena_client`, `freeze_athena_client`, `refresh_client_statistics`, and `toggle_supabase_ssl_enforcement` return an error immediately.
 - `execute_sql` rejects queries containing write keywords (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ALTER`, `TRUNCATE`, `GRANT`, `REVOKE`, `REPLACE`).
+- New SDK write tools (auth_sign_up, auth_sign_in, chat_*, sdk_db_insert etc) are also blocked in read-only.
 
 ### Client routing
 
