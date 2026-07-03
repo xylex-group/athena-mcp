@@ -1,6 +1,6 @@
 # athena-mcp
 
-current version: `0.4.1`
+current version: `0.4.2`
 MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Athena's PostgreSQL management API as MCP tools for use with LLM agents and AI coding assistants.
 
 ## Tool calls
