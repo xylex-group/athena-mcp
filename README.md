@@ -1,6 +1,6 @@
 # athena-mcp
 
-current version: `0.4.2`
+current version: `0.5.0`
 MCP server for the [Athena](https://athena-db.com) database gateway. Exposes Athena's PostgreSQL management API as MCP tools for use with LLM agents and AI coding assistants.
 
 ## Tool calls
@@ -421,6 +421,25 @@ Set the following environment variables before starting the server:
 | `ATHENA_ADMIN_EXPERIMENTAL_ENABLED` | Set to `true` to register admin-only tool surfaces                     | `false`                         |
 | `READ_ONLY`       | Set to `true` to disable write operations                                        | `false`                         |
 | `HEALTH_PORT`     | Port for HTTP health server (GET /health returns version). Omit to disable       | _(disabled)_                    |
+
+A persistent `~/.athena/config.yaml` (YAML) is also loaded on startup and provides defaults. Environment variables and CLI flags override the file. On first run the server writes an example file you can edit:
+
+```yaml
+athena:
+  base_url: https://mirror2.athena-cluster.com
+  api_key: ""
+  default_client: ""
+  available_clients: []
+  read_only: false
+  athena_admin_experimental_enabled: false
+```
+
+All tool calls, errors, and server activity are logged to:
+- `~/.athena/logs/athena-mcp-YYYY-MM-DD.log` (human readable)
+- `~/.athena/logs/tool-calls-YYYY-MM-DD.jsonl` (machine readable, every single call)
+- `~/.athena/stats.json` (live statistics registry: total calls, per-tool counts + durations + errors, recent errors)
+
+These files survive restarts and give full audit + diagnostics even if the MCP host swallows stderr.
 
 These can also be passed as CLI args (override env vars):
 
