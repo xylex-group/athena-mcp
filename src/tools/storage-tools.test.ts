@@ -180,13 +180,14 @@ describe("registerStorageTools", () => {
 
     const tool = server.tools.get("storage_file_upload_binary");
 
-    await expect(
-      tool?.callback({
-        body_base64: Buffer.from("hello").toString("base64"),
-        body_text: "hello",
-        file_id: "file_123",
-      }),
-    ).rejects.toThrow(
+    const result = await tool?.callback({
+      body_base64: Buffer.from("hello").toString("base64"),
+      body_text: "hello",
+      file_id: "file_123",
+    });
+    // Our wrapper catches validation errors and returns proper MCP error result (never throws)
+    expect((result as any)?.isError).toBe(true);
+    expect(String((result as any)?.content?.[0]?.text || "")).toContain(
       "Provide exactly one of `body_base64` or `body_text` for storage_file_upload_binary.",
     );
     expect(uploadBinary).not.toHaveBeenCalled();

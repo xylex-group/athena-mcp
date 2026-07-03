@@ -6,6 +6,7 @@ import {
 import { z } from "zod";
 import type { AthenaServerConfig } from "./config.js";
 import { errorContent } from "./responses.js";
+import { logger } from "./logger.js";
 
 interface FetchOptions {
   body?: unknown;
@@ -64,6 +65,7 @@ export class AthenaRuntime {
   ): Promise<unknown> {
     const normalizedPath = `/${path.replace(/^\/+/, "")}`;
     const url = `${this.config.baseUrl}${normalizedPath}`;
+    const method = opts.method ?? "GET";
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "X-Athena-Client": clientName,
@@ -76,11 +78,18 @@ export class AthenaRuntime {
       ...(opts.headers ?? {}),
     };
 
-    const response = await fetch(url, {
-      method: opts.method ?? "GET",
-      headers,
-      ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method,
+        headers,
+        ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
+      });
+    } catch (fetchErr: any) {
+      const msg = `Network error calling ${method} ${url} (client=${clientName}): ${fetchErr?.message || fetchErr}`;
+      logger.error(msg, { path, client: clientName, method }).catch(() => {});
+      throw new Error(msg);
+    }
 
     const text = await response.text();
     let data: unknown = text;
@@ -91,9 +100,17 @@ export class AthenaRuntime {
     }
 
     if (!response.ok) {
-      throw new Error(
-        `HTTP ${response.status}: ${typeof data === "string" ? data : JSON.stringify(data)}`,
-      );
+      const errBody = typeof data === "string" ? data : JSON.stringify(data);
+      const detailed = `HTTP ${response.status} ${response.statusText} for ${method} ${url} (client=${clientName}): ${errBody}`;
+      // log rich error server side
+      logger.warn("Athena API error response", {
+        status: response.status,
+        path,
+        client: clientName,
+        method,
+        bodyPreview: typeof errBody === "string" ? errBody.slice(0, 600) : undefined,
+      }).catch(() => {});
+      throw new Error(detailed);
     }
 
     return data;
@@ -106,19 +123,28 @@ export class AthenaRuntime {
   ): Promise<BinarySummary> {
     const normalizedPath = `/${path.replace(/^\/+/, "")}`;
     const url = `${this.config.baseUrl}${normalizedPath}`;
-    const response = await fetch(url, {
-      method: opts.method ?? "GET",
-      headers: {
-        "X-Athena-Client": clientName,
-        ...(this.config.apiKey
-          ? {
-              apikey: this.config.apiKey,
-              "x-api-key": this.config.apiKey,
-            }
-          : {}),
-      },
-      ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
-    });
+    const method = opts.method ?? "GET";
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method,
+        headers: {
+          "X-Athena-Client": clientName,
+          ...(this.config.apiKey
+            ? {
+                apikey: this.config.apiKey,
+                "x-api-key": this.config.apiKey,
+              }
+            : {}),
+        },
+        ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
+      });
+    } catch (fetchErr: any) {
+      const msg = `Network error (binary) ${method} ${url} (client=${clientName}): ${fetchErr?.message || fetchErr}`;
+      logger.error(msg, { path, client: clientName }).catch(() => {});
+      throw new Error(msg);
+    }
 
     const contentType = response.headers.get("content-type") ?? undefined;
     const bodyText =
@@ -128,9 +154,9 @@ export class AthenaRuntime {
         : undefined;
 
     if (!response.ok) {
-      throw new Error(
-        `HTTP ${response.status}: ${bodyText ?? response.statusText}`,
-      );
+      const detail = bodyText ?? response.statusText;
+      logger.warn("Athena binary API error", { status: response.status, path, client: clientName }).catch(() => {});
+      throw new Error(`HTTP ${response.status}: ${detail}`);
     }
 
     return {

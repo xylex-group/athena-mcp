@@ -1,3 +1,7 @@
+import fs from "node:fs";
+import * as YAML from "yaml";
+import { getAthenaPaths } from "./paths.js";
+
 function parseBooleanFlag(value?: string): boolean | undefined {
   if (value == null) return undefined;
   const normalized = value.trim().toLowerCase();
@@ -9,6 +13,56 @@ function parseBooleanFlag(value?: string): boolean | undefined {
 function parseClientList(value?: string): string[] {
   if (!value) return [];
   return [...new Set(value.split(",").map((part) => part.trim()).filter(Boolean))];
+}
+
+export interface FileConfig {
+  athena_base_url?: string;
+  athena_api_key?: string;
+  athena_default_client?: string;
+  athena_available_clients?: string[] | string;
+  read_only?: boolean;
+  health_port?: number;
+  athena_admin_experimental_enabled?: boolean;
+  // allow nested
+  athena?: Partial<FileConfig>;
+}
+
+function loadFileConfig(): FileConfig {
+  const paths = getAthenaPaths();
+  try {
+    if (!fs.existsSync(paths.configFile)) return {};
+    const raw = fs.readFileSync(paths.configFile, "utf8");
+    const parsed = YAML.parse(raw) as FileConfig | null;
+    if (!parsed || typeof parsed !== "object") return {};
+
+    // Support flat or { athena: { ... } }
+    const root = (parsed.athena && typeof parsed.athena === "object" ? parsed.athena : parsed) as FileConfig;
+
+    const clientsRaw = root.athena_available_clients ?? root.athena?.athena_available_clients;
+    let availableClients: string[] | undefined;
+    if (Array.isArray(clientsRaw)) {
+      availableClients = clientsRaw.filter(Boolean).map(String);
+    } else if (typeof clientsRaw === "string") {
+      availableClients = parseClientList(clientsRaw);
+    }
+
+    return {
+      athena_base_url: root.athena_base_url ?? root.athena?.athena_base_url,
+      athena_api_key: root.athena_api_key ?? root.athena?.athena_api_key,
+      athena_default_client: root.athena_default_client ?? root.athena?.athena_default_client,
+      athena_available_clients: availableClients,
+      read_only: typeof root.read_only === "boolean" ? root.read_only : (typeof root.athena?.read_only === "boolean" ? root.athena.read_only : undefined),
+      health_port: typeof root.health_port === "number" ? root.health_port : (typeof root.athena?.health_port === "number" ? root.athena.health_port : undefined),
+      athena_admin_experimental_enabled:
+        typeof root.athena_admin_experimental_enabled === "boolean"
+          ? root.athena_admin_experimental_enabled
+          : (typeof root.athena?.athena_admin_experimental_enabled === "boolean" ? root.athena.athena_admin_experimental_enabled : undefined),
+    };
+  } catch (err) {
+    // Do not crash server on bad config file; fall back silently but note via stderr
+    process.stderr.write(`[athena-mcp] Warning: failed to load ${paths.configFile}: ${String(err)}\n`);
+    return {};
+  }
 }
 
 export interface AthenaServerConfig {
@@ -89,11 +143,14 @@ function parseCliArgs(): CliArgs {
 }
 
 export function loadConfig(): AthenaServerConfig {
+  const file = loadFileConfig();
   const cli = parseCliArgs();
 
+  // Precedence: file < env < cli  (cli wins)
   const baseUrlRaw = (
     cli.baseUrl ??
     process.env.ATHENA_BASE_URL ??
+    file.athena_base_url ??
     "https://mirror2.athena-cluster.com"
   ).trim();
   if (
@@ -105,33 +162,52 @@ export function loadConfig(): AthenaServerConfig {
     );
   }
 
-  const apiKey = (cli.apiKey ?? process.env.ATHENA_API_KEY ?? "").trim();
-  const availableClients =
+  const apiKey = (
+    cli.apiKey ??
+    process.env.ATHENA_API_KEY ??
+    file.athena_api_key ??
+    ""
+  ).trim();
+
+  // available clients: prefer explicit lists from higher precedence
+  let availableClients: string[] =
     cli.availableClients ??
     parseClientList(process.env.ATHENA_AVAILABLE_CLIENTS) ??
     [];
-  const defaultClient = (
+  if (availableClients.length === 0 && file.athena_available_clients) {
+    availableClients = Array.isArray(file.athena_available_clients)
+      ? file.athena_available_clients
+      : parseClientList(String(file.athena_available_clients));
+  }
+
+  const defaultClientRaw = (
     cli.client ??
     process.env.ATHENA_DEFAULT_CLIENT ??
     process.env.ATHENA_CLIENT ??
+    file.athena_default_client ??
     availableClients[0] ??
     ""
   ).trim();
 
   const normalizedClients = availableClients.length
     ? availableClients
-    : (defaultClient ? [defaultClient] : []);
+    : (defaultClientRaw ? [defaultClientRaw] : []);
 
   // Do not throw here: allow server to boot so MCP host gets a live connection.
   // Tool calls (via resolveClientName) and admin flows will surface clear configuration errors.
-  const effectiveDefault = defaultClient && normalizedClients.includes(defaultClient)
-    ? defaultClient
+  const effectiveDefault = defaultClientRaw && normalizedClients.includes(defaultClientRaw)
+    ? defaultClientRaw
     : (normalizedClients[0] ?? "");
+
+  const fileReadOnly = typeof file.read_only === "boolean" ? file.read_only : undefined;
+  const fileHealth = typeof file.health_port === "number" ? file.health_port : undefined;
+  const fileAdminExp = typeof file.athena_admin_experimental_enabled === "boolean" ? file.athena_admin_experimental_enabled : undefined;
 
   return {
     adminExperimentalEnabled:
       cli.adminExperimentalEnabled ??
       parseBooleanFlag(process.env.ATHENA_ADMIN_EXPERIMENTAL_ENABLED) ??
+      fileAdminExp ??
       false,
     apiKey,
     availableClients: normalizedClients,
@@ -141,10 +217,12 @@ export function loadConfig(): AthenaServerConfig {
       cli.healthPort ??
       (process.env.HEALTH_PORT
         ? Number.parseInt(process.env.HEALTH_PORT, 10)
-        : undefined),
+        : fileHealth),
     readOnly:
       cli.readOnly !== undefined
         ? cli.readOnly
-        : process.env.READ_ONLY === "true",
+        : process.env.READ_ONLY === "true"
+          ? true
+          : (fileReadOnly ?? false),
   };
 }
