@@ -958,6 +958,230 @@
       "inputSchema": {
         "$ref": "#/definitions/EmptyRequest"
       }
+    },
+    {
+      "name": "auth_get_session",
+      "description": "Get current session using the Athena auth SDK binding.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "auth_get_user",
+      "description": "Get current user using the Athena auth SDK binding.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "auth_sign_out",
+      "description": "Sign out the current session using the Athena auth SDK.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "auth_refresh_token",
+      "description": "Refresh access token using a refresh token via auth SDK.",
+      "inputSchema": {
+        "$ref": "#/definitions/RefreshTokenRequest"
+      }
+    },
+    {
+      "name": "auth_sign_up",
+      "description": "Sign up a new user via Athena auth SDK. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/SignUpRequest"
+      }
+    },
+    {
+      "name": "auth_sign_in",
+      "description": "Sign in with email/password via Athena auth SDK. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/SignInRequest"
+      }
+    },
+    {
+      "name": "auth_forgot_password",
+      "description": "Trigger forgot password flow. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/ForgotPasswordRequest"
+      }
+    },
+    {
+      "name": "auth_reset_password",
+      "description": "Reset password with token. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/ResetPasswordRequest"
+      }
+    },
+    {
+      "name": "auth_admin_list_users",
+      "description": "Admin list users via auth admin surface (may require elevated rights).",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "auth_admin_create_user",
+      "description": "Admin create user via auth. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/AdminCreateUserRequest"
+      }
+    },
+    {
+      "name": "chat_list_rooms",
+      "description": "List chat rooms via Athena chat SDK module.",
+      "inputSchema": {
+        "$ref": "#/definitions/ListRoomsRequest"
+      }
+    },
+    {
+      "name": "chat_create_room",
+      "description": "Create a chat room. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/ChatCreateRoomRequest"
+      }
+    },
+    {
+      "name": "chat_get_room",
+      "description": "Get a specific chat room.",
+      "inputSchema": {
+        "$ref": "#/definitions/ChatRoomIdRequest"
+      }
+    },
+    {
+      "name": "chat_archive_room",
+      "description": "Archive a chat room. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/ChatRoomIdRequest"
+      }
+    },
+    {
+      "name": "chat_list_messages",
+      "description": "List messages for a room.",
+      "inputSchema": {
+        "$ref": "#/definitions/ListMessagesRequest"
+      }
+    },
+    {
+      "name": "chat_send_message",
+      "description": "Send a message. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/SendMessageRequest"
+      }
+    },
+    {
+      "name": "chat_get_realtime_info",
+      "description": "Get chat realtime connection metadata via SDK.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "chat_search_messages",
+      "description": "Search chat messages.",
+      "inputSchema": {
+        "$ref": "#/definitions/ChatSearchRequest"
+      }
+    },
+    {
+      "name": "sdk_db_select",
+      "description": "SDK-driven select via db.from().select().findMany() with filters.",
+      "inputSchema": {
+        "$ref": "#/definitions/SdkSelectRequest"
+      }
+    },
+    {
+      "name": "sdk_db_insert",
+      "description": "SDK insert/upsert via db module. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/SdkInsertRequest"
+      }
+    },
+    {
+      "name": "sdk_db_update",
+      "description": "SDK update via db.from().update(). Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/SdkUpdateRequest"
+      }
+    },
+    {
+      "name": "sdk_db_delete",
+      "description": "SDK delete via db module. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/SdkDeleteRequest"
+      }
+    },
+    {
+      "name": "sdk_db_rpc",
+      "description": "Call Postgres function/RPC via SDK db.rpc().",
+      "inputSchema": {
+        "$ref": "#/definitions/SdkRpcRequest"
+      }
+    },
+    {
+      "name": "sdk_db_query",
+      "description": "Raw query via SDK client.",
+      "inputSchema": {
+        "$ref": "#/definitions/SdkQueryRequest"
+      }
+    },
+    {
+      "name": "sdk_verify_connection",
+      "description": "Verify the SDK client connection.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "gateway_fetch",
+      "description": "Direct low-level gateway fetch operation.",
+      "inputSchema": {
+        "$ref": "#/definitions/GatewayFetchRequest"
+      }
+    },
+    {
+      "name": "gateway_insert",
+      "description": "Direct gateway insert. Blocked in read_only.",
+      "inputSchema": {
+        "$ref": "#/definitions/GatewayInsertRequest"
+      }
+    },
+    {
+      "name": "gateway_rpc",
+      "description": "Direct /gateway/rpc/{fn} call.",
+      "inputSchema": {
+        "$ref": "#/definitions/GatewayRpcRequest"
+      }
+    },
+    {
+      "name": "gateway_sql",
+      "description": "Direct SQL execution via gateway sql surface (write guarded).",
+      "inputSchema": {
+        "$ref": "#/definitions/GatewaySqlRequest"
+      }
+    },
+    {
+      "name": "list_views_management",
+      "description": "List views using management surface.",
+      "inputSchema": {
+        "$ref": "#/definitions/ListViewsMgmtRequest"
+      }
+    },
+    {
+      "name": "list_management_functions",
+      "description": "List management functions surface.",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
+    },
+    {
+      "name": "management_capabilities",
+      "description": "Management capabilities (alias).",
+      "inputSchema": {
+        "$ref": "#/definitions/EmptyRequest"
+      }
     }
   ],
   "definitions": {
@@ -1941,6 +2165,506 @@
       "required": [
         "enabled"
       ]
+    },
+    "RefreshTokenRequest": {
+      "type": "object",
+      "properties": {
+        "refresh_token": {
+          "type": "string",
+          "description": "Refresh token"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "refresh_token"
+      ]
+    },
+    "SignUpRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "User email"
+        },
+        "password": {
+          "type": "string",
+          "description": "Password (min 8)"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Optional metadata"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "email",
+        "password"
+      ]
+    },
+    "SignInRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "email",
+        "password"
+      ]
+    },
+    "ForgotPasswordRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "email"
+      ]
+    },
+    "ResetPasswordRequest": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "new_password": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "token",
+        "new_password"
+      ]
+    },
+    "AdminCreateUserRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "email_confirm": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "email"
+      ]
+    },
+    "ListRoomsRequest": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer"
+        },
+        "include_archived": {
+          "type": "boolean"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": []
+    },
+    "ChatCreateRoomRequest": {
+      "type": "object",
+      "properties": {
+        "slug": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "is_private": {
+          "type": "boolean"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "slug"
+      ]
+    },
+    "ChatRoomIdRequest": {
+      "type": "object",
+      "properties": {
+        "room_id": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "room_id"
+      ]
+    },
+    "ListMessagesRequest": {
+      "type": "object",
+      "properties": {
+        "room_id": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer"
+        },
+        "before_id": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "room_id"
+      ]
+    },
+    "SendMessageRequest": {
+      "type": "object",
+      "properties": {
+        "room_id": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "room_id",
+        "content"
+      ]
+    },
+    "ChatSearchRequest": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "room_id": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    },
+    "SdkSelectRequest": {
+      "type": "object",
+      "properties": {
+        "table": {
+          "type": "string"
+        },
+        "select": {
+          "type": "string"
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "limit": {
+          "type": "integer"
+        },
+        "offset": {
+          "type": "integer"
+        },
+        "order": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "table"
+      ]
+    },
+    "SdkInsertRequest": {
+      "type": "object",
+      "properties": {
+        "table": {
+          "type": "string"
+        },
+        "data": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": true
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          ]
+        },
+        "upsert": {
+          "type": "boolean"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "table",
+        "data"
+      ]
+    },
+    "SdkUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "table": {
+          "type": "string"
+        },
+        "set": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "table",
+        "set",
+        "filters"
+      ]
+    },
+    "SdkDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "table": {
+          "type": "string"
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "table",
+        "filters"
+      ]
+    },
+    "SdkRpcRequest": {
+      "type": "object",
+      "properties": {
+        "function_name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "function_name"
+      ]
+    },
+    "SdkQueryRequest": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "params": {
+          "type": "array",
+          "items": {}
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    },
+    "GatewayFetchRequest": {
+      "type": "object",
+      "properties": {
+        "table_name": {
+          "type": "string"
+        },
+        "select": {
+          "type": "string"
+        },
+        "where": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "limit": {
+          "type": "integer"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "table_name"
+      ]
+    },
+    "GatewayInsertRequest": {
+      "type": "object",
+      "properties": {
+        "table_name": {
+          "type": "string"
+        },
+        "insert_body": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": true
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          ]
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "table_name",
+        "insert_body"
+      ]
+    },
+    "GatewayRpcRequest": {
+      "type": "object",
+      "properties": {
+        "function_name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "function_name"
+      ]
+    },
+    "GatewaySqlRequest": {
+      "type": "object",
+      "properties": {
+        "sql": {
+          "type": "string"
+        },
+        "driver": {
+          "type": "string",
+          "enum": [
+            "athena",
+            "postgresql",
+            "supabase"
+          ]
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": [
+        "sql"
+      ]
+    },
+    "ListViewsMgmtRequest": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string",
+          "description": "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+        }
+      },
+      "required": []
     },
     "StorageCatalogIdRequest": {
       "type": "object",

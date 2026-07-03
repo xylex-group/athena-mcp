@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: "Athena MCP Tools"
-  version: 0.2.0
+  version: 0.4.0
   description: "MCP tool definitions for the Athena MCP server. Each tool is exposed over POST endpoints so OpenAPI-aware clients can understand the tool inputs and outputs before invoking the corresponding MCP methods. Most request schemas also accept an optional `client` override when the server is configured with multiple allowed Athena clients."
 servers:
   - url: https://athena-mcp.example.com/tools
@@ -2314,6 +2314,542 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ToolResult"
+  /tools/auth_get_session:
+    post:
+      summary: "Get auth session (SDK)"
+      description: "Get current session using the Athena auth SDK binding."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/auth_get_user:
+    post:
+      summary: "Get auth user (SDK)"
+      description: "Get current user using the Athena auth SDK binding."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/auth_sign_out:
+    post:
+      summary: "Auth sign out (SDK)"
+      description: "Sign out the current session using the Athena auth SDK."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/auth_refresh_token:
+    post:
+      summary: "Refresh auth token (SDK)"
+      description: "Refresh access token using a refresh token via auth SDK."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/auth_sign_up:
+    post:
+      summary: "Auth sign up (SDK)"
+      description: "Sign up a new user via Athena auth SDK. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUpRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/auth_sign_in:
+    post:
+      summary: "Auth sign in (SDK)"
+      description: "Sign in with email/password via Athena auth SDK. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignInRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/auth_forgot_password:
+    post:
+      summary: "Auth forgot password"
+      description: "Trigger forgot password flow. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/auth_reset_password:
+    post:
+      summary: "Auth reset password"
+      description: "Reset password with token. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/auth_admin_list_users:
+    post:
+      summary: "Auth admin list users"
+      description: "Admin list users via auth admin surface (may require elevated rights)."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/auth_admin_create_user:
+    post:
+      summary: "Auth admin create user"
+      description: "Admin create user via auth. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateUserRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/chat_list_rooms:
+    post:
+      summary: "List chat rooms (SDK)"
+      description: "List chat rooms via Athena chat SDK module."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListRoomsRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/chat_create_room:
+    post:
+      summary: "Create chat room (SDK)"
+      description: "Create a chat room. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatCreateRoomRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/chat_get_room:
+    post:
+      summary: "Get chat room (SDK)"
+      description: "Get a specific chat room."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRoomIdRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/chat_archive_room:
+    post:
+      summary: "Archive chat room"
+      description: "Archive a chat room. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRoomIdRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/chat_list_messages:
+    post:
+      summary: "List chat messages (SDK)"
+      description: "List messages for a room."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListMessagesRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/chat_send_message:
+    post:
+      summary: "Send chat message (SDK)"
+      description: "Send a message. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/chat_get_realtime_info:
+    post:
+      summary: "Chat realtime info (SDK)"
+      description: "Get chat realtime connection metadata via SDK."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/chat_search_messages:
+    post:
+      summary: "Search chat messages"
+      description: "Search chat messages."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatSearchRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/sdk_db_select:
+    post:
+      summary: "SDK db select (from/findMany)"
+      description: "SDK-driven select via db.from().select().findMany() with filters."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SdkSelectRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/sdk_db_insert:
+    post:
+      summary: "SDK db insert/upsert"
+      description: "SDK insert/upsert via db module. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SdkInsertRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/sdk_db_update:
+    post:
+      summary: "SDK db update"
+      description: "SDK update via db.from().update(). Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SdkUpdateRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/sdk_db_delete:
+    post:
+      summary: "SDK db delete"
+      description: "SDK delete via db module. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SdkDeleteRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/sdk_db_rpc:
+    post:
+      summary: "SDK db RPC call"
+      description: "Call Postgres function/RPC via SDK db.rpc()."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SdkRpcRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/sdk_db_query:
+    post:
+      summary: "SDK raw query"
+      description: "Raw query via SDK client."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SdkQueryRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/sdk_verify_connection:
+    post:
+      summary: "SDK verify connection"
+      description: "Verify the SDK client connection."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/gateway_fetch:
+    post:
+      summary: "Gateway fetch (direct)"
+      description: "Direct low-level gateway fetch operation."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatewayFetchRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/gateway_insert:
+    post:
+      summary: "Gateway insert (direct)"
+      description: "Direct gateway insert. Blocked in read_only."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatewayInsertRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/gateway_rpc:
+    post:
+      summary: "Gateway RPC (direct)"
+      description: "Direct /gateway/rpc/{fn} call."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatewayRpcRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/gateway_sql:
+    post:
+      summary: "Gateway SQL execute"
+      description: "Direct SQL execution via gateway sql surface (write guarded)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatewaySqlRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/list_views_management:
+    post:
+      summary: "List views (management)"
+      description: "List views using management surface."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListViewsMgmtRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/list_management_functions:
+    post:
+      summary: "List management functions"
+      description: "List management functions surface."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+  /tools/management_capabilities:
+    post:
+      summary: "Management capabilities"
+      description: "Management capabilities (alias)."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyRequest"
+      responses:
+        200:
+          description: "Tool result payload"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
 components:
   schemas:
     EmptyRequest:
@@ -2994,6 +3530,345 @@ components:
           description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
       required:
         - enabled
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          description: "Refresh token"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - refresh_token
+    SignUpRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          description: "User email"
+        password:
+          type: string
+          description: "Password (min 8)"
+        data:
+          type: object
+          additionalProperties: true
+          description: "Optional metadata"
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - email
+        - password
+    SignInRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - email
+        - password
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - email
+    ResetPasswordRequest:
+      type: object
+      properties:
+        token:
+          type: string
+        new_password:
+          type: string
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - token
+        - new_password
+    AdminCreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        email_confirm:
+          type: boolean
+        data:
+          type: object
+          additionalProperties: true
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - email
+    ListRoomsRequest:
+      type: object
+      properties:
+        limit:
+          type: integer
+        include_archived:
+          type: boolean
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required: []
+    ChatCreateRoomRequest:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        is_private:
+          type: boolean
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - slug
+    ChatRoomIdRequest:
+      type: object
+      properties:
+        room_id:
+          type: string
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - room_id
+    ListMessagesRequest:
+      type: object
+      properties:
+        room_id:
+          type: string
+        limit:
+          type: integer
+        before_id:
+          type: string
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - room_id
+    SendMessageRequest:
+      type: object
+      properties:
+        room_id:
+          type: string
+        content:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - room_id
+        - content
+    ChatSearchRequest:
+      type: object
+      properties:
+        query:
+          type: string
+        room_id:
+          type: string
+        limit:
+          type: integer
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - query
+    SdkSelectRequest:
+      type: object
+      properties:
+        table:
+          type: string
+        select:
+          type: string
+        filters:
+          type: object
+          additionalProperties: true
+        limit:
+          type: integer
+        offset:
+          type: integer
+        order:
+          type: string
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - table
+    SdkInsertRequest:
+      type: object
+      properties:
+        table:
+          type: string
+        data:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: array
+              items:
+              type: object
+              additionalProperties: true
+        upsert:
+          type: boolean
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - table
+        - data
+    SdkUpdateRequest:
+      type: object
+      properties:
+        table:
+          type: string
+        set:
+          type: object
+          additionalProperties: true
+        filters:
+          type: object
+          additionalProperties: true
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - table
+        - set
+        - filters
+    SdkDeleteRequest:
+      type: object
+      properties:
+        table:
+          type: string
+        filters:
+          type: object
+          additionalProperties: true
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - table
+        - filters
+    SdkRpcRequest:
+      type: object
+      properties:
+        function_name:
+          type: string
+        args:
+          type: object
+          additionalProperties: true
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - function_name
+    SdkQueryRequest:
+      type: object
+      properties:
+        query:
+          type: string
+        params:
+          type: array
+          items: {}
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - query
+    GatewayFetchRequest:
+      type: object
+      properties:
+        table_name:
+          type: string
+        select:
+          type: string
+        where:
+          type: object
+          additionalProperties: true
+        limit:
+          type: integer
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - table_name
+    GatewayInsertRequest:
+      type: object
+      properties:
+        table_name:
+          type: string
+        insert_body:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: array
+              items:
+              type: object
+              additionalProperties: true
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - table_name
+        - insert_body
+    GatewayRpcRequest:
+      type: object
+      properties:
+        function_name:
+          type: string
+        args:
+          type: object
+          additionalProperties: true
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - function_name
+    GatewaySqlRequest:
+      type: object
+      properties:
+        sql:
+          type: string
+        driver:
+          type: string
+          enum:
+            - athena
+            - postgresql
+            - supabase
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required:
+        - sql
+    ListViewsMgmtRequest:
+      type: object
+      properties:
+        schema:
+          type: string
+        client:
+          type: string
+          description: "Optional Athena client override. The server rejects values not present in ATHENA_AVAILABLE_CLIENTS and only exposes this field when multiple clients are configured."
+      required: []
     StorageCatalogIdRequest:
       type: object
       properties:

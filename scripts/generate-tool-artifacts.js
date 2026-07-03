@@ -600,6 +600,192 @@ const definitions = {
     },
     required: ["enabled"],
   }),
+  // New SDK + module coverage schemas
+  RefreshTokenRequest: withClient({
+    type: "object",
+    properties: { refresh_token: { type: "string", description: "Refresh token" } },
+    required: ["refresh_token"],
+  }),
+  SignUpRequest: withClient({
+    type: "object",
+    properties: {
+      email: { type: "string", description: "User email" },
+      password: { type: "string", description: "Password (min 8)" },
+      data: { type: "object", additionalProperties: true, description: "Optional metadata" },
+    },
+    required: ["email", "password"],
+  }),
+  SignInRequest: withClient({
+    type: "object",
+    properties: {
+      email: { type: "string" },
+      password: { type: "string" },
+    },
+    required: ["email", "password"],
+  }),
+  ForgotPasswordRequest: withClient({
+    type: "object",
+    properties: { email: { type: "string" } },
+    required: ["email"],
+  }),
+  ResetPasswordRequest: withClient({
+    type: "object",
+    properties: { token: { type: "string" }, new_password: { type: "string" } },
+    required: ["token", "new_password"],
+  }),
+  AdminCreateUserRequest: withClient({
+    type: "object",
+    properties: {
+      email: { type: "string" },
+      password: { type: "string" },
+      email_confirm: { type: "boolean" },
+      data: { type: "object", additionalProperties: true },
+    },
+    required: ["email"],
+  }),
+  ListRoomsRequest: withClient({
+    type: "object",
+    properties: {
+      limit: { type: "integer" },
+      include_archived: { type: "boolean" },
+    },
+    required: [],
+  }),
+  ChatCreateRoomRequest: withClient({
+    type: "object",
+    properties: {
+      slug: { type: "string" },
+      name: { type: "string" },
+      metadata: { type: "object", additionalProperties: true },
+      is_private: { type: "boolean" },
+    },
+    required: ["slug"],
+  }),
+  ChatRoomIdRequest: withClient({
+    type: "object",
+    properties: { room_id: { type: "string" } },
+    required: ["room_id"],
+  }),
+  ListMessagesRequest: withClient({
+    type: "object",
+    properties: {
+      room_id: { type: "string" },
+      limit: { type: "integer" },
+      before_id: { type: "string" },
+    },
+    required: ["room_id"],
+  }),
+  SendMessageRequest: withClient({
+    type: "object",
+    properties: {
+      room_id: { type: "string" },
+      content: { type: "string" },
+      metadata: { type: "object", additionalProperties: true },
+    },
+    required: ["room_id", "content"],
+  }),
+  ChatSearchRequest: withClient({
+    type: "object",
+    properties: {
+      query: { type: "string" },
+      room_id: { type: "string" },
+      limit: { type: "integer" },
+    },
+    required: ["query"],
+  }),
+  SdkSelectRequest: withClient({
+    type: "object",
+    properties: {
+      table: { type: "string" },
+      select: { type: "string" },
+      filters: { type: "object", additionalProperties: true },
+      limit: { type: "integer" },
+      offset: { type: "integer" },
+      order: { type: "string" },
+    },
+    required: ["table"],
+  }),
+  SdkInsertRequest: withClient({
+    type: "object",
+    properties: {
+      table: { type: "string" },
+      data: { oneOf: [{ type: "object", additionalProperties: true }, { type: "array", items: { type: "object", additionalProperties: true } }] },
+      upsert: { type: "boolean" },
+    },
+    required: ["table", "data"],
+  }),
+  SdkUpdateRequest: withClient({
+    type: "object",
+    properties: {
+      table: { type: "string" },
+      set: { type: "object", additionalProperties: true },
+      filters: { type: "object", additionalProperties: true },
+    },
+    required: ["table", "set", "filters"],
+  }),
+  SdkDeleteRequest: withClient({
+    type: "object",
+    properties: {
+      table: { type: "string" },
+      filters: { type: "object", additionalProperties: true },
+    },
+    required: ["table", "filters"],
+  }),
+  SdkRpcRequest: withClient({
+    type: "object",
+    properties: {
+      function_name: { type: "string" },
+      args: { type: "object", additionalProperties: true },
+    },
+    required: ["function_name"],
+  }),
+  SdkQueryRequest: withClient({
+    type: "object",
+    properties: {
+      query: { type: "string" },
+      params: { type: "array", items: {} },
+    },
+    required: ["query"],
+  }),
+  GatewayFetchRequest: withClient({
+    type: "object",
+    properties: {
+      table_name: { type: "string" },
+      select: { type: "string" },
+      where: { type: "object", additionalProperties: true },
+      limit: { type: "integer" },
+    },
+    required: ["table_name"],
+  }),
+  GatewayInsertRequest: withClient({
+    type: "object",
+    properties: {
+      table_name: { type: "string" },
+      insert_body: { oneOf: [{ type: "object", additionalProperties: true }, { type: "array", items: { type: "object", additionalProperties: true } }] },
+    },
+    required: ["table_name", "insert_body"],
+  }),
+  GatewayRpcRequest: withClient({
+    type: "object",
+    properties: {
+      function_name: { type: "string" },
+      args: { type: "object", additionalProperties: true },
+    },
+    required: ["function_name"],
+  }),
+  GatewaySqlRequest: withClient({
+    type: "object",
+    properties: {
+      sql: { type: "string" },
+      driver: { type: "string", enum: ["athena", "postgresql", "supabase"] },
+    },
+    required: ["sql"],
+  }),
+  ListViewsMgmtRequest: withClient({
+    type: "object",
+    properties: { schema: { type: "string" } },
+    required: [],
+  }),
   StorageCatalogIdRequest: withClient({
     type: "object",
     properties: {
@@ -906,6 +1092,39 @@ const tools = [
   ["get_metrics", "Fetch Athena's Prometheus metrics payload.", "EmptyRequest"],
   ["get_embedded_openapi", "Download Athena's embedded OpenAPI YAML document.", "EmptyRequest"],
   ["get_websocket_info", "Read Athena's websocket gateway contract metadata.", "EmptyRequest"],
+  // SDK interfacing tools (auth, chat, sdk-db, gateway direct routes)
+  ["auth_get_session", "Get current session using the Athena auth SDK binding.", "EmptyRequest"],
+  ["auth_get_user", "Get current user using the Athena auth SDK binding.", "EmptyRequest"],
+  ["auth_sign_out", "Sign out the current session using the Athena auth SDK.", "EmptyRequest"],
+  ["auth_refresh_token", "Refresh access token using a refresh token via auth SDK.", "RefreshTokenRequest"],
+  ["auth_sign_up", "Sign up a new user via Athena auth SDK. Blocked in read_only.", "SignUpRequest"],
+  ["auth_sign_in", "Sign in with email/password via Athena auth SDK. Blocked in read_only.", "SignInRequest"],
+  ["auth_forgot_password", "Trigger forgot password flow. Blocked in read_only.", "ForgotPasswordRequest"],
+  ["auth_reset_password", "Reset password with token. Blocked in read_only.", "ResetPasswordRequest"],
+  ["auth_admin_list_users", "Admin list users via auth admin surface (may require elevated rights).", "EmptyRequest"],
+  ["auth_admin_create_user", "Admin create user via auth. Blocked in read_only.", "AdminCreateUserRequest"],
+  ["chat_list_rooms", "List chat rooms via Athena chat SDK module.", "ListRoomsRequest"],
+  ["chat_create_room", "Create a chat room. Blocked in read_only.", "ChatCreateRoomRequest"],
+  ["chat_get_room", "Get a specific chat room.", "ChatRoomIdRequest"],
+  ["chat_archive_room", "Archive a chat room. Blocked in read_only.", "ChatRoomIdRequest"],
+  ["chat_list_messages", "List messages for a room.", "ListMessagesRequest"],
+  ["chat_send_message", "Send a message. Blocked in read_only.", "SendMessageRequest"],
+  ["chat_get_realtime_info", "Get chat realtime connection metadata via SDK.", "EmptyRequest"],
+  ["chat_search_messages", "Search chat messages.", "ChatSearchRequest"],
+  ["sdk_db_select", "SDK-driven select via db.from().select().findMany() with filters.", "SdkSelectRequest"],
+  ["sdk_db_insert", "SDK insert/upsert via db module. Blocked in read_only.", "SdkInsertRequest"],
+  ["sdk_db_update", "SDK update via db.from().update(). Blocked in read_only.", "SdkUpdateRequest"],
+  ["sdk_db_delete", "SDK delete via db module. Blocked in read_only.", "SdkDeleteRequest"],
+  ["sdk_db_rpc", "Call Postgres function/RPC via SDK db.rpc().", "SdkRpcRequest"],
+  ["sdk_db_query", "Raw query via SDK client.", "SdkQueryRequest"],
+  ["sdk_verify_connection", "Verify the SDK client connection.", "EmptyRequest"],
+  ["gateway_fetch", "Direct low-level gateway fetch operation.", "GatewayFetchRequest"],
+  ["gateway_insert", "Direct gateway insert. Blocked in read_only.", "GatewayInsertRequest"],
+  ["gateway_rpc", "Direct /gateway/rpc/{fn} call.", "GatewayRpcRequest"],
+  ["gateway_sql", "Direct SQL execution via gateway sql surface (write guarded).", "GatewaySqlRequest"],
+  ["list_views_management", "List views using management surface.", "ListViewsMgmtRequest"],
+  ["list_management_functions", "List management functions surface.", "EmptyRequest"],
+  ["management_capabilities", "Management capabilities (alias).", "EmptyRequest"],
 ];
 
 const mcpTools = {
@@ -985,6 +1204,39 @@ const summaryOverrides = {
   get_metrics: "Fetch metrics",
   get_embedded_openapi: "Download embedded OpenAPI",
   get_websocket_info: "Read websocket gateway metadata",
+  // sdk / module additions
+  auth_get_session: "Get auth session (SDK)",
+  auth_get_user: "Get auth user (SDK)",
+  auth_sign_out: "Auth sign out (SDK)",
+  auth_refresh_token: "Refresh auth token (SDK)",
+  auth_sign_up: "Auth sign up (SDK)",
+  auth_sign_in: "Auth sign in (SDK)",
+  auth_forgot_password: "Auth forgot password",
+  auth_reset_password: "Auth reset password",
+  auth_admin_list_users: "Auth admin list users",
+  auth_admin_create_user: "Auth admin create user",
+  chat_list_rooms: "List chat rooms (SDK)",
+  chat_create_room: "Create chat room (SDK)",
+  chat_get_room: "Get chat room (SDK)",
+  chat_archive_room: "Archive chat room",
+  chat_list_messages: "List chat messages (SDK)",
+  chat_send_message: "Send chat message (SDK)",
+  chat_get_realtime_info: "Chat realtime info (SDK)",
+  chat_search_messages: "Search chat messages",
+  sdk_db_select: "SDK db select (from/findMany)",
+  sdk_db_insert: "SDK db insert/upsert",
+  sdk_db_update: "SDK db update",
+  sdk_db_delete: "SDK db delete",
+  sdk_db_rpc: "SDK db RPC call",
+  sdk_db_query: "SDK raw query",
+  sdk_verify_connection: "SDK verify connection",
+  gateway_fetch: "Gateway fetch (direct)",
+  gateway_insert: "Gateway insert (direct)",
+  gateway_rpc: "Gateway RPC (direct)",
+  gateway_sql: "Gateway SQL execute",
+  list_views_management: "List views (management)",
+  list_management_functions: "List management functions",
+  management_capabilities: "Management capabilities",
 };
 
 for (const [name] of tools) {
@@ -1023,7 +1275,7 @@ const openapi = {
   openapi: "3.0.3",
   info: {
     title: "Athena MCP Tools",
-    version: "0.2.0",
+    version: "0.4.0",
     description:
       "MCP tool definitions for the Athena MCP server. Each tool is exposed over POST endpoints so OpenAPI-aware clients can understand the tool inputs and outputs before invoking the corresponding MCP methods. Most request schemas also accept an optional `client` override when the server is configured with multiple allowed Athena clients.",
   },

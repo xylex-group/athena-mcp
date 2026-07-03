@@ -4,7 +4,11 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { loadConfig } from "./config.js";
 import { AthenaRuntime } from "./runtime.js";
 import { registerAdminTools } from "./tools/admin-tools.js";
+import { registerAuthTools } from "./tools/auth-tools.js";
+import { registerChatTools } from "./tools/chat-tools.js";
 import { registerDataTools } from "./tools/data-tools.js";
+import { registerGatewayTools } from "./tools/gateway-tools.js";
+import { registerSdkDbTools } from "./tools/sdk-db-tools.js";
 import { registerStorageTools } from "./tools/storage-tools.js";
 import { getVersion } from "./version.js";
 
@@ -19,6 +23,10 @@ const server = new McpServer({
 registerDataTools(server, runtime);
 registerStorageTools(server, runtime);
 registerAdminTools(server, runtime);
+registerAuthTools(server, runtime);
+registerChatTools(server, runtime);
+registerSdkDbTools(server, runtime);
+registerGatewayTools(server, runtime);
 
 function startHealthServer(): void {
   if (config.healthPort == null || config.healthPort <= 0) return;

@@ -1,6 +1,7 @@
 import {
   createClient,
   type AthenaSdkClientWithStorage,
+  type AthenaClient,
 } from "@xylex-group/athena";
 import { z } from "zod";
 import type { AthenaServerConfig } from "./config.js";
@@ -163,6 +164,31 @@ export class AthenaRuntime {
       this.storageClients.set(clientName, client);
     }
     return client;
+  }
+
+  private readonly sdkClients = new Map<string, AthenaClient>();
+
+  public getSdkClient(clientName: string): AthenaClient {
+    let client = this.sdkClients.get(clientName);
+    if (!client) {
+      client = createClient(this.config.baseUrl, this.config.apiKey, {
+        client: clientName,
+      });
+      this.sdkClients.set(clientName, client);
+    }
+    return client;
+  }
+
+  public getAuthModule(clientName: string): any {
+    return (this.getSdkClient(clientName) as any).auth;
+  }
+
+  public getChatModule(clientName: string): any {
+    return (this.getSdkClient(clientName) as any).chat;
+  }
+
+  public getDbModule(clientName: string): any {
+    return (this.getSdkClient(clientName) as any).db;
   }
 }
 
