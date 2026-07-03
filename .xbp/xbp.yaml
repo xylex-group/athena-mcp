@@ -16,7 +16,11 @@ install_command: pnpm install
 kafka_brokers: null
 kafka_public_url: null
 kafka_topic: null
-linear: null
+linear:
+  release:
+    initiative_ids:
+    - fd28f67f-8dc8-44b2-bf14-3821ce389145
+    organization_name: ${LINEAR_ORG_NAME}
 log_files: null
 monitor_expected_code: null
 monitor_interval: null
