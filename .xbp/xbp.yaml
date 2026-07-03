@@ -9,7 +9,7 @@ environment:
   ATHENA_API_KEY: ${ATHENA_API_KEY}
   ATHENA_AVAILABLE_CLIENTS: ${ATHENA_AVAILABLE_CLIENTS}
   ATHENA_CLIENT: ${ATHENA_CLIENT}
-  NPM_ACCESS_TOKEN: ${NPM_ACCESS_TOKEN}
+  NPM_TOKEN: ${NPM_TOKEN}
   READ_ONLY: ${READ_ONLY}
 github: null
 install_command: pnpm install
@@ -40,7 +40,7 @@ publish:
     preflight_commands:
     - pnpm test
     publish_command: npm publish
-    token: ${NPM_ACCESS_TOKEN}
+    token: ${NPM_TOKEN}
     use_wsl: false
     working_directory: ./
     wsl_distribution: null
@@ -57,7 +57,7 @@ services:
     ATHENA_API_KEY: ${ATHENA_API_KEY}
     ATHENA_AVAILABLE_CLIENTS: ${ATHENA_AVAILABLE_CLIENTS}
     ATHENA_CLIENT: ${ATHENA_CLIENT}
-    NPM_ACCESS_TOKEN: ${NPM_ACCESS_TOKEN}
+    NPM_TOKEN: ${NPM_TOKEN}
     READ_ONLY: ${READ_ONLY}
   force_run_from_root: false
   healthcheck_path: null
