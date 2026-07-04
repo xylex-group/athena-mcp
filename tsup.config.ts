@@ -12,6 +12,9 @@ export default defineConfig({
   treeshake: true,
   splitting: false,
   dts: false,
+  banner: {
+    js: "#!/usr/bin/env node",
+  },
   outExtension() {
     return { js: ".js" };
   },
